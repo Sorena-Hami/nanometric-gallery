@@ -1,48 +1,33 @@
-const portfolioItems = [
-    // اینجا لیست عکس‌ها و ویدیوها باید وارد بشه
-    {
-        id: "ART-101",
-        type: "image",
-        category: "portrait",
-        tags: "زن, کلاسیک, سیاه سفید",
-        url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=500&q=60",
-        desc: "پرتره کلاسیک سیاه و سفید"
-    },
-    {
-        id: "VID-202",
-        type: "video",
-        category: "video",
-        tags: "موشن, تبلیغاتی",
-        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-        desc: "نمونه موشن گرافیک تبلیغاتی"
-    },
-    {
-        id: "ART-103",
-        type: "image",
-        category: "landscape",
-        tags: "طبیعت, دریا, غروب",
-        url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=500&q=60",
-        desc: "عکاسی منظره غروب"
-    },
-    {
-        id: "ART-104",
-        type: "image",
-        category: "square",
-        tags: "لوگو, مینیمال",
-        url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=500&q=60",
-        desc: "طراحی لوگو مینیمال"
-    }
-];
-
+const portfolioItems = [];  // لیست عکس‌ها و ویدیوها از گوگل شیت بارگذاری می‌شود
 const gallery = document.getElementById('gallery');
 const searchInput = document.getElementById('searchInput');
 
+// بارگذاری لینک‌ها از گوگل شیت
+fetch('https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/{RANGE}?key={API_KEY}')
+    .then(response => response.json())
+    .then(data => {
+        // بر اساس داده‌های دریافت شده، portfolioItems را پر کنیم
+        data.values.forEach(row => {
+            portfolioItems.push({
+                id: row[0],  // کد آلبوم
+                type: row[1],  // نوع (تصویر/ویدیو)
+                category: row[2],  // دسته‌بندی
+                tags: row[3],  // تگ‌ها
+                url: row[4],  // لینک تصویر/ویدیو
+                desc: row[5]  // توضیحات
+            });
+        });
+        renderGallery(portfolioItems);  // گالری را با داده‌ها پر کن
+    })
+    .catch(error => console.error('خطا در بارگذاری داده‌ها:', error));
+
+// تابع ساخت گالری
 function renderGallery(items) {
     gallery.innerHTML = '';
     items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'gallery-item';
-        
+
         let mediaContent = '';
         if(item.type === 'video') {
             mediaContent = `<video src="${item.url}" muted onmouseover="this.play()" onmouseout="this.pause()"></video>`;
@@ -62,8 +47,6 @@ function renderGallery(items) {
         gallery.appendChild(div);
     });
 }
-
-renderGallery(portfolioItems);
 
 function filterGallery(cat) {
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -106,7 +89,7 @@ function openLightbox(id) {
     } else {
         lbContent.innerHTML = `<img src="${item.url}" style="max-width:90%; max-height:80vh">`;
     }
-    
+
     lbCode.innerText = "کد سفارش: " + item.id;
     lbDesc.innerText = item.desc;
     lightbox.style.display = 'flex';
@@ -114,7 +97,7 @@ function openLightbox(id) {
 
 function closeLightbox() {
     lightbox.style.display = 'none';
-    lbContent.innerHTML = ''; // توقف ویدیو
+    lbContent.innerHTML = '';  // توقف ویدیو
 }
 
 lightbox.addEventListener('click', (e) => {
