@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آلبوم دیجیتال</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="album-container">
+        <h1>آلبوم دیجیتال</h1>
+        <div class="albums">
+            <!-- دسته‌بندی آلبوم -->
+            <div class="album" onclick="openAlbum('album1')">
+                <img src="https://res.cloudinary.com/demo/image/upload/v1612552545/sample.jpg" alt="آلبوم 1" class="thumbnail">
+                <p>آلبوم 1</p>
+            </div>
+            <!-- آلبوم دیگر -->
+            <div class="album" onclick="openAlbum('album2')">
+                <img src="https://res.cloudinary.com/demo/image/upload/v1612552545/sample2.jpg" alt="آلبوم 2" class="thumbnail">
+                <p>آلبوم 2</p>
+            </div>
+        </div>
+
+        <!-- نمایش آلبوم بزرگ -->
+        <div id="album1" class="album-viewer">
+            <div class="viewer-content">
+                <button class="close" onclick="closeAlbum('album1')">بستن</button>
+                <h2>آلبوم 1</h2>
+                <img src="https://res.cloudinary.com/demo/image/upload/v1612552545/sample.jpg" alt="آلبوم 1" class="full-image">
+                <p>کد: ABC123</p>
+                <button class="copy-code" onclick="copyCode('ABC123')">کپی کد</button>
+            </div>
+        </div>
+
+        <div id="album2" class="album-viewer">
+            <div class="viewer-content">
+                <button class="close" onclick="closeAlbum('album2')">بستن</button>
+                <h2>آلبوم 2</h2>
+                <img src="https://res.cloudinary.com/demo/image/upload/v1612552545/sample2.jpg" alt="آلبوم 2" class="full-image">
+                <p>کد: XYZ456</p>
+                <button class="copy-code" onclick="copyCode('XYZ456')">کپی کد</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
