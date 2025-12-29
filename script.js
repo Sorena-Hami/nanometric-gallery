@@ -33,31 +33,22 @@ fetch(sheetURL)
 
 // نمایش آلبوم بزرگ
 function openAlbum(albumTitle, imageURL) {
-  const albumViewer = document.createElement('div');
-  albumViewer.classList.add('album-viewer');
-  albumViewer.innerHTML = `
-    <div class="viewer-content">
-      <button class="close" onclick="closeAlbum()">بستن</button>
-      <h2>${albumTitle}</h2>
-      <img src="${imageURL}" alt="${albumTitle}" class="full-image">
-      <p>کد: ${albumTitle}</p>
-      <button class="copy-code" onclick="copyCode('${albumTitle}')">کپی کد</button>
-    </div>
-  `;
-  
-  document.body.appendChild(albumViewer);
+  document.getElementById('album-title').textContent = albumTitle;
+  document.getElementById('full-image').src = imageURL;
+  document.getElementById('album-code').textContent = `کد: ${albumTitle}`;
+  const albumViewer = document.getElementById('album-viewer');
+  albumViewer.classList.add('show');
 }
 
 // بستن آلبوم
 function closeAlbum() {
-  const albumViewer = document.querySelector('.album-viewer');
-  if (albumViewer) {
-    albumViewer.remove();
-  }
+  const albumViewer = document.getElementById('album-viewer');
+  albumViewer.classList.remove('show');
 }
 
 // کپی کد
-function copyCode(code) {
+function copyCode() {
+  const code = document.getElementById('album-title').textContent;
   navigator.clipboard.writeText(code).then(() => {
     alert('کد کپی شد: ' + code);
   });
