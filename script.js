@@ -1,20 +1,19 @@
-// بازکردن آلبوم
 function openAlbum(albumId) {
-    document.getElementById(albumId).style.display = 'flex';
+    var albumViewer = document.getElementById(albumId);
+    albumViewer.style.display = "flex";
 }
 
-// بستن آلبوم
 function closeAlbum(albumId) {
-    document.getElementById(albumId).style.display = 'none';
+    var albumViewer = document.getElementById(albumId);
+    albumViewer.style.display = "none";
 }
 
-// کپی کردن کد
 function copyCode(code) {
-    const textArea = document.createElement('textarea');
-    textArea.value = code;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
-    alert('کد کپی شد!');
+    var tempInput = document.createElement("input");
+    tempInput.value = code;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    alert("کد کپی شد: " + code);
 }
