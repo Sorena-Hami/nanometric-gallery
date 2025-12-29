@@ -1,105 +1,159 @@
-/* استایل عمومی */
+:root {
+    --bg-color: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --accent-color: #bb86fc;
+}
+
 body {
-    font-family: 'Vazir', sans-serif;
+    font-family: 'Tahoma', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-h1 {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 2rem;
-}
-
-/* استایل آلبوم‌ها */
-.album-container {
-    text-align: center;
     padding: 20px;
 }
 
-.albums {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-}
-
-.album {
-    width: 150px;
+header {
     text-align: center;
-    cursor: pointer;
+    margin-bottom: 40px;
 }
 
-.thumbnail {
+h1 { margin-bottom: 10px; color: var(--accent-color); }
+
+.search-box {
     width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
+    max-width: 500px;
+    padding: 15px;
+    border-radius: 25px;
+    border: none;
+    background: var(--card-bg);
+    color: white;
+    font-size: 16px;
+    outline: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
-.album p {
-    margin-top: 10px;
-    font-size: 1.1rem;
+.filters {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-/* استایل آلبوم بزرگ */
-.album-viewer {
-    position: fixed;
-    top: 0;
-    left: 0;
+.filter-btn {
+    background: var(--card-bg);
+    border: 1px solid #333;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filter-btn.active, .filter-btn:hover {
+    background: var(--accent-color);
+    color: black;
+    font-weight: bold;
+}
+
+.gallery-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.gallery-item {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.gallery-item:hover {
+    transform: translateY(-5px);
+}
+
+.media-wrapper {
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    position: relative;
+}
+
+.media-wrapper img, .media-wrapper video {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.item-info {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.code-badge {
+    background: #333;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-family: monospace;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+}
+
+.copy-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.copy-btn:hover { color: white; }
+
+.lightbox {
     display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    flex-direction: column;
 }
 
-.viewer-content {
-    background: #fff;
-    padding: 20px;
+.lightbox img, .lightbox video {
+    max-width: 90%;
+    max-height: 80vh;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(187, 134, 252, 0.2);
+}
+
+.lightbox-details {
+    margin-top: 15px;
     text-align: center;
-    border-radius: 8px;
-    position: relative;
-    max-width: 600px;
-    width: 80%;
-}
-
-.viewer-content img {
-    width: 100%;
-    height: auto;
-    max-width: 500px;
-    margin: 20px 0;
-}
-
-.copy-code {
-    background-color: #4CAF50;
     color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
 }
 
-.copy-code:hover {
-    background-color: #45a049;
-}
-
-.close {
+.close-lightbox {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.5rem;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: white;
     cursor: pointer;
-    background: none;
-    border: none;
-    color: #333;
 }
 
-/* استایل برای حالت نمایش */
-.album-viewer.show {
-    display: flex;
+@media (max-width: 600px) {
+    .gallery-container {
+        grid-template-columns: 1fr;
+    }
 }
