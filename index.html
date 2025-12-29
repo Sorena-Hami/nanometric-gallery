@@ -1,27 +1,34 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>آلبوم دیجیتال</title>
+    <title>ژورنال دیجیتال آژانس هنری</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="album-container">
-        <h1>آلبوم دیجیتال</h1>
-        <div class="albums" id="albums">
-            <!-- آلبوم‌ها اینجا اضافه می‌شوند -->
+    <header>
+        <h1>ژورنال هنری دیجیتال</h1>
+        <input type="text" id="searchInput" class="search-box" placeholder="جستجو...">
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterGallery('all')">همه</button>
+            <button class="filter-btn" onclick="filterGallery('portrait')">پرتره</button>
+            <button class="filter-btn" onclick="filterGallery('landscape')">منظره</button>
+            <button class="filter-btn" onclick="filterGallery('video')">ویدیو</button>
+            <button class="filter-btn" onclick="filterGallery('square')">مربعی</button>
         </div>
+    </header>
+
+    <div class="gallery-container" id="gallery">
+        <!-- آیتم ها توسط جاوااسکریپت اینجا ساخته می‌شوند -->
     </div>
 
-    <!-- بخش نمایش آلبوم بزرگ -->
-    <div id="album-viewer" class="album-viewer">
-        <div class="viewer-content">
-            <button class="close" onclick="closeAlbum()">بستن</button>
-            <h2 id="album-title"></h2>
-            <img id="full-image" class="full-image" src="" alt="">
-            <p id="album-code"></p>
-            <button class="copy-code" onclick="copyCode()">کپی کد</button>
+    <div id="lightbox" class="lightbox">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div id="lightbox-content"></div>
+        <div class="lightbox-details">
+            <h3 id="lb-code" style="color:var(--accent-color)"></h3>
+            <p id="lb-desc"></p>
         </div>
     </div>
 
