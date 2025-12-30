@@ -1,141 +1,336 @@
-:root {
-    --bg-color: #0f0f12;
-    --card-bg: #1a1a1f;
-    --primary-color: #00f2ff;
-    --secondary-color: #7000ff;
-    --text-color: #f0f0f0;
-    --text-muted: #aaaaaa;
-    --border-color: #333;
-    --folder-bg: #25252b;
-    --folder-active: #00f2ff;
-    --price-color: #00ff88;
-    --discount-color: #ff4444;
+// --- تنظیمات ---
+const SHEET_ID = '103cZAMY3lFK797NZ3-BforE30EZWXydOpGewxrlP4FI';
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+const CONTACT = {
+    phone: "09304653535",
+    wa: "989304653535",
+    tg: "Official_iDirect",
+    ei: "Official_iDirect",
+    ba: "Official_iDirect",
+    ru: "Official_iDirect",
+    ig: "nanometriclab"
+};
+
+let portfolioData = [];
+let cart = [];
+let marketerCode = "";
+let panzoomInstance = null;
+
+// 1. استارت آپ
+window.onload = async () => {
+    // بازاریاب
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('ref')) {
+        marketerCode = urlParams.get('ref');
+        sessionStorage.setItem('nano_ref', marketerCode);
+    } else {
+        marketerCode = sessionStorage.getItem('nano_ref') || "";
+    }
+
+    try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        portfolioData = parseCSV(text);
+        
+        document.getElementById('loading-overlay').style.display = 'none';
+        
+        initSlider();
+        renderFolderTabs();
+        filterData('همه'); // نمایش اولیه
+
+        // هشدار خروج
+        window.onbeforeunload = function() {
+            return "آیا مطمئن هستید که می‌خواهید خارج شوید؟";
+        };
+
+    } catch (e) {
+        console.error("Error loading data", e);
+        document.getElementById('loading-overlay').innerHTML = "<p>خطا در بارگذاری. لطفا مجدد تلاش کنید.</p>";
+    }
+};
+
+// 2. پارسر + آمار تصادفی
+function parseCSV(csv) {
+    const lines = csv.split('\n');
+    const result = [];
+    for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (!row) continue;
+        const c = row.map(val => val.replace(/^"|"$/g, '').trim());
+
+        if (c.length >= 2 && c[1].startsWith('http')) {
+            // تولید آمار فیک بر اساس کد عکس (ثابت برای هر عکس)
+            const idNum = 1000 + i;
+            const views = Math.floor((idNum * 13) % 5000) + 500;
+            const likes = Math.floor(views * 0.15);
+            
+            result.push({
+                id: `NANO-${idNum}`,
+                cat: c[0], img: c[1],
+                price: c[2] || "0", discount: c[3] || "0",
+                title: c[4] || `طرح شماره ${idNum}`,
+                desc: c[5] || "",
+                stats: { views, likes }
+            });
+        }
+    }
+    return result;
 }
 
-[data-theme="light"] {
-    --bg-color: #f4f4f9;
-    --card-bg: #ffffff;
-    --primary-color: #0088cc;
-    --secondary-color: #5500aa;
-    --text-color: #333333;
-    --text-muted: #666666;
-    --border-color: #ddd;
-    --folder-bg: #e0e0e0;
-    --folder-active: #0088cc;
+// 3. اسلایدر تصادفی
+function initSlider() {
+    const wrapper = document.getElementById('slider-wrapper');
+    // شافل کردن و برداشتن 5 تا
+    const shuffled = [...portfolioData].sort(() => 0.5 - Math.random()).slice(0, 5);
+    
+    shuffled.forEach(item => {
+        wrapper.innerHTML += `
+            <div class="swiper-slide">
+                <img src="${item.img}" alt="${item.title}">
+                <div class="slide-caption">${item.title}</div>
+            </div>`;
+    });
+
+    new Swiper(".mySwiper", {
+        loop: true, autoplay: { delay: 4000 },
+        pagination: { el: ".swiper-pagination" },
+    });
 }
 
-* { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-body { font-family: 'Vazirmatn', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; line-height: 1.6; transition: 0.3s; }
-
-/* Header & Slider */
-.main-header { padding: 15px; background: var(--bg-color); border-bottom: 1px solid var(--border-color); }
-.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.brand-logo { height: 40px; object-fit: contain; }
-
-.swiper { width: 100%; height: 250px; border-radius: 15px; overflow: hidden; }
-.swiper-slide { position: relative; }
-.swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
-.slide-caption { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; padding: 10px; font-size: 0.9rem; }
-
-/* Theme Toggle */
-.theme-toggle { position: relative; width: 50px; height: 26px; }
-#theme-switch { display: none; }
-.theme-label { 
-    display: flex; justify-content: space-between; align-items: center; padding: 0 5px;
-    background: #333; border-radius: 20px; cursor: pointer; height: 100%; position: relative;
+// 4. تب‌ها
+function renderFolderTabs() {
+    const cats = ['همه', ...new Set(portfolioData.map(p => p.cat))];
+    const con = document.getElementById('tagContainer');
+    con.innerHTML = '';
+    cats.forEach(cat => {
+        const sample = cat === 'همه' ? portfolioData[0] : portfolioData.find(p => p.cat === cat);
+        con.innerHTML += `
+            <div class="folder-tab ${cat === 'همه' ? 'active' : ''}" onclick="changeTab(this, '${cat}')">
+                <img src="${sample ? sample.img : ''}"> ${cat}
+            </div>`;
+    });
 }
-.theme-label::after {
-    content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
-    background: var(--primary-color); border-radius: 50%; transition: 0.3s;
+function changeTab(el, cat) {
+    document.querySelectorAll('.folder-tab').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    filterData(cat === 'همه' ? '' : cat);
 }
-#theme-switch:checked + .theme-label::after { transform: translateX(24px); }
 
-/* Controls & Folders */
-.controls-sticky { position: sticky; top: 0; z-index: 90; background: var(--bg-color); border-bottom: 1px solid var(--border-color); padding: 10px 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-.controls-inner { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
-.search-row { display: flex; gap: 10px; margin-bottom: 10px; }
-.search-box { flex-grow: 1; padding: 10px 20px; border-radius: 25px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); }
+// 5. گالری
+function filterData(query) {
+    const q = query.toLowerCase();
+    const data = query === '' 
+        ? portfolioData 
+        : portfolioData.filter(i => i.cat === query || i.title.toLowerCase().includes(q) || i.id.toLowerCase().includes(q));
+    
+    // رندر گرید
+    const grid = document.getElementById('gallery-view');
+    grid.innerHTML = '';
+    data.forEach(item => {
+        const hasOff = item.discount && item.discount !== "0";
+        const priceShow = hasOff ? parseInt(item.discount).toLocaleString() : (item.price === "0" ? "" : parseInt(item.price).toLocaleString());
+        
+        grid.innerHTML += `
+            <div class="art-card" onmousedown="startLongPress(this)" onmouseup="cancelLongPress()" onclick="openModal('${item.id}')">
+                <div class="card-img-wrap">
+                    <img src="${item.img}" loading="lazy">
+                    <button class="quick-add-btn" onclick="event.stopPropagation(); addToCart('${item.id}')">+ لیست</button>
+                    ${priceShow ? `<span class="card-badge-price">${priceShow} ت</span>` : ''}
+                    <div class="stat-overlay">
+                        <span><i class="fas fa-eye"></i> ${item.stats.views}</span>
+                        <span><i class="fas fa-heart"></i> ${item.stats.likes}</span>
+                    </div>
+                </div>
+            </div>`;
+    });
 
-.folder-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; }
-.folder-tab {
-    background: var(--folder-bg); color: var(--text-muted); padding: 8px 20px; border-radius: 10px 10px 0 0;
-    cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.3s;
-    display: flex; align-items: center; gap: 5px;
+    // رندر کتاب (اگر کم باشند)
+    initFlipbook(data.slice(0, 30)); // محدودیت برای پرفورمنس
 }
-.folder-tab img { width: 20px; height: 20px; border-radius: 4px; object-fit: cover; }
-.folder-tab.active { background: var(--card-bg); color: var(--text-color); border-bottom-color: var(--folder-active); font-weight: bold; }
 
-/* Gallery */
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; padding: 15px; max-width: 1200px; margin: 0 auto; }
-.art-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); cursor: pointer; position: relative; transition: 0.3s; }
-.art-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-.card-img-wrap { position: relative; padding-top: 100%; }
-.card-img-wrap img { position: absolute; top: 0; width: 100%; height: 100%; object-fit: cover; }
-.card-badge-price { position: absolute; bottom: 5px; left: 5px; background: rgba(0,0,0,0.7); color: var(--price-color); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
-.card-info { padding: 10px; }
-.card-title { font-size: 0.9rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+// جستجوی زنده
+document.getElementById('searchInput').addEventListener('input', (e) => filterData(e.target.value));
 
-/* Floating Cart */
-.floating-cart {
-    position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px;
-    background: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.4); z-index: 100; cursor: pointer; color: #000; font-size: 1.5rem;
+// 6. کتاب ورق زن (Turn.js)
+function initFlipbook(data) {
+    const book = $("#flipbook");
+    if(book.turn("is")) book.turn("destroy"); // ریست
+    book.html(""); // پاک کردن
+
+    data.forEach(item => {
+        const element = $("<div />").addClass("page").html(`
+            <img src="${item.img}" style="max-width:90%; max-height:80%">
+            <p style="margin-top:10px">${item.title}</p>
+            <small>${item.id}</small>
+        `);
+        book.append(element);
+    });
+
+    book.turn({
+        width: 800, height: 500, autoCenter: true,
+        when: { turning: () => document.getElementById('page-flip-sound').play() }
+    });
 }
-.cart-badge { position: absolute; top: -5px; right: -5px; background: red; color: white; font-size: 0.8rem; width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
 
-.cart-panel {
-    position: fixed; top: 0; left: -100%; width: 300px; height: 100%; background: var(--card-bg);
-    z-index: 101; transition: 0.3s; box-shadow: 5px 0 20px rgba(0,0,0,0.3); display: flex; flex-direction: column;
+// 7. مودال و زوم
+let currentItem = null;
+function openModal(id) {
+    currentItem = portfolioData.find(i => i.id === id);
+    if(!currentItem) return;
+
+    document.getElementById('m-img').src = currentItem.img;
+    document.getElementById('m-title').innerText = currentItem.title;
+    document.getElementById('m-code').innerText = currentItem.id;
+    document.getElementById('m-desc').innerText = currentItem.desc || "بدون توضیحات";
+    document.getElementById('m-views').innerText = currentItem.stats.views;
+    document.getElementById('m-likes').innerText = currentItem.stats.likes;
+
+    // قیمت
+    const pBox = document.getElementById('m-price-box');
+    if(currentItem.discount && currentItem.discount !== "0") {
+        pBox.innerHTML = `<span class="old-price">${parseInt(currentItem.price).toLocaleString()}</span> ${parseInt(currentItem.discount).toLocaleString()} تومان`;
+    } else {
+        pBox.innerHTML = currentItem.price === "0" ? "توافقی" : `${parseInt(currentItem.price).toLocaleString()} تومان`;
+    }
+
+    // دکمه‌ها
+    renderSocialButtons(currentItem);
+    document.getElementById('detailModal').style.display = 'block';
 }
-.cart-panel.open { left: 0; }
-.cart-header { padding: 15px; background: var(--bg-color); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-.cart-items { flex-grow: 1; overflow-y: auto; padding: 15px; }
-.cart-item { display: flex; gap: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-.cart-item img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
-.cart-footer { padding: 15px; border-top: 1px solid var(--border-color); background: var(--bg-color); text-align: center; }
 
-/* Modal & Socials */
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 200; justify-content: center; align-items: center; }
-.modal-body { background: var(--card-bg); width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 15px; position: relative; }
-.modal-img-wrap { position: relative; background: #000; text-align: center; }
-.modal-img { max-width: 100%; max-height: 50vh; }
-.fullscreen-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-
-.modal-info { padding: 20px; }
-.price-box { font-size: 1.2rem; color: var(--price-color); margin-bottom: 10px; font-weight: bold; }
-.old-price { text-decoration: line-through; color: var(--text-muted); font-size: 0.9rem; margin-left: 10px; }
-
-.social-grid-main { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
-.soc-btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;
-    border-radius: 10px; border: none; cursor: pointer; font-family: inherit; font-weight: bold; text-decoration: none; color: white;
+function renderSocialButtons(itemOrList) {
+    const container = document.getElementById('socialLinksContainer');
+    const platforms = [
+        {id:'wa', name:'واتساپ', icon:'https://res.cloudinary.com/dsj7o7yld/image/upload/v1767115995/25-256308_whatsapp-social-media-icons-whatsapp_o9zkit.png'},
+        {id:'tg', name:'تلگرام', icon:'https://res.cloudinary.com/dsj7o7yld/image/upload/v1767113676/telgrampng.parspng.com__rzuqpw.png'},
+        {id:'ei', name:'ایتا', icon:'https://res.cloudinary.com/dsj7o7yld/image/upload/v1767111952/Eitaa-vector-logo_1221133400_we5m5l.png'},
+        {id:'ba', name:'بله', icon:'https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112210/bale-color_a9gfhw.png'},
+        {id:'ru', name:'روبیکا', icon:'https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112404/Rubika_Icon_zlc48h.png'},
+        {id:'ig', name:'اینستا', icon:'https://res.cloudinary.com/dsj7o7yld/image/upload/v1767116766/050e6fb1-f306-4571-a198-61f15806718e_1_ln8bgv.png'}
+    ];
+    
+    container.innerHTML = platforms.map(p => `
+        <button onclick="sendOrder('${p.id}')" class="soc-btn ${p.id}">
+            <img src="${p.icon}"> ${p.name}
+        </button>
+    `).join('');
 }
-.soc-btn img { width: 24px; height: 24px; }
-.soc-btn.mini { width: 40px; height: 40px; padding: 0; border-radius: 50%; }
-.social-grid-mini { display: flex; justify-content: center; gap: 10px; }
 
-/* Colors for buttons */
-.wa { background: #25D366; }
-.tg { background: #0088cc; }
-.ig { background: #E1306C; }
-.ei { background: #e67e22; }
-.ba { background: #34495e; }
-.ru { background: #9b59b6; }
-.add-to-cart-btn { width: 100%; background: var(--primary-color); color: #000; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 15px; }
+function sendOrder(platform) {
+    let msg = "";
+    // اگر از داخل مودال (تکی)
+    if(!document.getElementById('cartPanel').classList.contains('open') && currentItem) {
+        msg = `سلام، طرح کد *${currentItem.id}* (${currentItem.title}) را می‌خواهم.`;
+    } else {
+        // اگر از سبد خرید
+        if(cart.length === 0) return alert("سبد خالی است");
+        msg = "سلام، سفارش لیست زیر را دارم:\n" + cart.map(i => `- ${i.id}: ${i.title}`).join('\n');
+    }
 
-/* Flipbook */
-#book-view { display: none; height: 80vh; justify-content: center; align-items: center; perspective: 2000px; }
-.book-wrapper { position: relative; width: 350px; height: 500px; transform-style: preserve-3d; }
-.book-page { position: absolute; inset: 0; background: var(--card-bg); border: 1px solid var(--border-color); transform-origin: right center; transition: transform 0.6s; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-.book-page.flipped { transform: rotateY(180deg); }
-.book-controls { position: absolute; bottom: -50px; width: 100%; display: flex; justify-content: center; gap: 20px; }
-.nav-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); padding: 10px 20px; cursor: pointer; border-radius: 20px; }
+    // بازاریابی مخفی: افزودن کد در فاصله بسیار دور
+    if(marketerCode) {
+        msg += "\n\n\n\n\n\n\n\n\n\n\n\nref_id:" + marketerCode;
+    }
 
-/* Footer */
-footer { text-align: center; padding: 30px; background: var(--card-bg); margin-top: 30px; }
-.footer-logo img { height: 30px; margin-bottom: 10px; }
-.social-slider { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; }
-.social-slider a { color: var(--text-muted); font-size: 1.5rem; transition: 0.3s; }
-.social-slider a:hover { color: var(--primary-color); }
-.tiny-icon { width: 24px; height: 24px; vertical-align: middle; filter: grayscale(100%); transition: 0.3s; }
-.tiny-icon:hover { filter: grayscale(0); }
+    let url = "";
+    const enc = encodeURIComponent(msg);
+    
+    if(platform === 'wa') url = `https://wa.me/${CONTACT.wa}?text=${enc}`;
+    else if(platform === 'tg') url = `https://t.me/${CONTACT.tg}?text=${enc}`;
+    else if(platform === 'ca') url = `tel:${CONTACT.phone}`;
+    else if(platform === 'sm') url = `sms:${CONTACT.phone}?body=${enc}`;
+    else if(platform === 'ei') url = `https://eitaa.com/${CONTACT.ei}`; // ایتا از متن لینک پشتیبانی نمی‌کند
+    else if(platform === 'ba') url = `https://ble.ir/${CONTACT.ba}`;
+    else if(platform === 'ru') url = `https://rubika.ir/${CONTACT.ru}`;
+    else if(platform === 'ig') url = `https://ig.me/m/${CONTACT.ig}`;
+
+    window.open(url, '_blank');
+}
+
+// 8. سبد خرید
+function addToCart(id) {
+    const item = portfolioData.find(i => i.id === id) || currentItem;
+    if(cart.find(c => c.id === item.id)) return alert("قبلا اضافه شده");
+    cart.push(item);
+    updateCart();
+    // انیمیشن پرش به سبد
+    const badge = document.getElementById('cart-count');
+    badge.style.transform = "scale(1.5)";
+    setTimeout(() => badge.style.transform = "scale(1)", 200);
+}
+function addToCartFromModal() { addToCart(currentItem.id); }
+
+function updateCart() {
+    document.getElementById('cart-count').innerText = cart.length;
+    const con = document.getElementById('cartItems');
+    con.innerHTML = '';
+    let total = 0;
+    cart.forEach((i, idx) => {
+        const pr = (i.discount && i.discount!=="0") ? parseInt(i.discount) : parseInt(i.price);
+        total += pr;
+        con.innerHTML += `
+            <div class="cart-item">
+                <img src="${i.img}">
+                <div><b>${i.title}</b><br><small>${i.id}</small></div>
+                <button onclick="cart.splice(${idx},1); updateCart()" style="color:red;border:none;background:none;margin-right:auto">🗑</button>
+            </div>`;
+    });
+    document.getElementById('cartTotal').innerText = `جمع: ${total.toLocaleString()} ت`;
+}
+function toggleCart() { document.getElementById('cartPanel').classList.toggle('open'); }
+function checkout(pl) { sendOrder(pl); }
+
+// 9. سایر ابزارها
+function toggleFullScreen() {
+    const fs = document.getElementById('fsViewer');
+    if(fs.style.display === 'flex') {
+        fs.style.display = 'none';
+    } else {
+        document.getElementById('fs-img').src = currentItem.img;
+        fs.style.display = 'flex';
+        // فعال‌سازی زوم
+        const elem = document.getElementById('fs-content');
+        if(panzoomInstance) panzoomInstance.dispose();
+        panzoomInstance = Panzoom(elem, { maxScale: 5 });
+        elem.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+    }
+}
+
+function copyCodeFromModal() {
+    navigator.clipboard.writeText(currentItem.id);
+    alert('کد کپی شد');
+}
+
+function shareItem() {
+    if(navigator.share) {
+        navigator.share({
+            title: currentItem.title,
+            text: `طرح زیبای ${currentItem.title} را ببینید`,
+            url: window.location.href
+        });
+    } else {
+        copyCodeFromModal();
+    }
+}
+
+function switchView(v) {
+    document.getElementById('gallery-view').style.display = v === 'gallery' ? 'grid' : 'none';
+    document.getElementById('book-view').style.display = v === 'book' ? 'flex' : 'none';
+}
+
+function toggleTheme() {
+    const b = document.body;
+    b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+
+// لانگ پرس (باز شدن سریع)
+let pressTimer;
+function startLongPress(el) {
+    pressTimer = setTimeout(() => {
+        el.click(); // ساده‌ترین حالت: باز کردن مودال
+    }, 1000);
+}
+function cancelLongPress() { clearTimeout(pressTimer); }
