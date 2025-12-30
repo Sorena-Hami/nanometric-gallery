@@ -1,76 +1,85 @@
-// --- تنظیمات اختصاصی شما ---
-// آیدی گوگل شیت (همان شیتی که دادید)
+// --- تنظیمات اصلی ---
 const SHEET_ID = '103cZAMY3lFK797NZ3-BforE30EZWXydOpGewxrlP4FI';
-
-// شماره واتساپ برای دریافت سفارش (کد کشور + شماره بدون صفر)
-const ADMIN_PHONE = '989123456789'; // مثال: 989121234567
-
-// آیدی تلگرام (بدون @)
-const TELEGRAM_ID = 'nanometric_admin'; 
-
-// ---------------------------
-// منطق برنامه (دست نزنید مگر اینکه بدانید چه می‌کنید)
-// ---------------------------
-
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-let portfolioData = [];
-let currentData = [];
-let currentBookPage = 0;
 
-// اجرا هنگام لود صفحه
+// اطلاعات تماس
+const CONTACT_INFO = {
+    phone: "989304653535",
+    whatsapp_id: "989304653535",
+    telegram_id: "Official_iDirect", // آیدی برای لینک مستقیم
+    eitaa_id: "Official_iDirect",
+    bale_id: "Official_iDirect",
+    rubika_id: "Official_iDirect",
+    instagram_id: "nanometriclab"
+};
+
+// لوگوها
+const LOGOS = {
+    wa: "https://res.cloudinary.com/dsj7o7yld/image/upload/v1767115995/25-256308_whatsapp-social-media-icons-whatsapp_o9zkit.png",
+    tg: "https://res.cloudinary.com/dsj7o7yld/image/upload/v1767113676/telgrampng.parspng.com__rzuqpw.png",
+    ig: "https://res.cloudinary.com/dsj7o7yld/image/upload/v1767116766/050e6fb1-f306-4571-a198-61f15806718e_1_ln8bgv.png",
+    ei: "https://res.cloudinary.com/dsj7o7yld/image/upload/v1767111952/Eitaa-vector-logo_1221133400_we5m5l.png",
+    ba: "https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112210/bale-color_a9gfhw.png",
+    ru: "https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112404/Rubika_Icon_zlc48h.png"
+};
+
+// متغیرها
+let portfolioData = [];
+let cart = [];
+let marketerCode = "";
+
+// 1. شروع برنامه
 window.onload = async () => {
+    // بررسی کد بازاریاب
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('ref')) {
+        marketerCode = urlParams.get('ref');
+        sessionStorage.setItem('nano_ref', marketerCode);
+    } else {
+        marketerCode = sessionStorage.getItem('nano_ref') || "";
+    }
+
     try {
         const res = await fetch(SHEET_URL);
         const text = await res.text();
-        
         portfolioData = parseCSV(text);
-        currentData = [...portfolioData];
-
-        // حذف لودینگ و نمایش گالری
-        document.getElementById('loading-view').style.display = 'none';
-        document.getElementById('gallery-view').style.display = 'grid';
         
-        if(portfolioData.length === 0) {
-            document.getElementById('gallery-view').innerHTML = '<p style="text-align:center;">هیچ طرحی یافت نشد!</p>';
-            return;
-        }
+        // حذف لودینگ
+        document.getElementById('loading-view').style.display = 'none';
 
-        renderGallery(currentData);
-        generateTags();
-        renderBook(currentData);
+        initSlider();
+        renderFolderTabs();
+        filterData('همه'); // نمایش پیش‌فرض
+        
     } catch (e) {
-        console.error(e);
-        document.getElementById('loading-view').innerHTML = '<p style="color:red">خطا در اتصال به گوگل شیت</p>';
+        document.getElementById('loading-view').style.display = 'none';
+        // خطای خاموش: چیزی نشان نمی‌دهیم
     }
 };
 
-// تبدیل CSV به JSON (پشتیبانی از 4 ستون)
+// 2. پارسر پیشرفته (پشتیبانی از قیمت)
 function parseCSV(csv) {
     const lines = csv.split('\n');
     const result = [];
     
-    // از ردیف 1 شروع می‌کنیم (فرض بر اینکه ردیف 0 هدر است)
     for (let i = 1; i < lines.length; i++) {
-        // این regex مقادیر داخل کوتیشن را درست جدا می‌کند
         const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-        
         if (!row) continue;
+        const clean = row.map(c => c.replace(/^"|"$/g, '').trim());
 
-        // پاکسازی کوتیشن‌ها
-        const cleanRow = row.map(cell => cell.replace(/^"|"$/g, '').trim());
+        if (clean.length >= 2) {
+            const cat = clean[0];
+            const img = clean[1];
+            // ستون‌های جدید: C=قیمت، D=تخفیف، E=عنوان، F=توضیحات
+            const price = clean[2] || "0";
+            const discount = clean[3] || "";
+            const title = clean[4] || `طرح ${cat}`;
+            const desc = clean[5] || "";
 
-        // انتظار داریم حداقل ستون A (دسته) و B (لینک) باشد
-        if (cleanRow.length >= 2) { 
-            const cat = cleanRow[0] || "عمومی";
-            const img = cleanRow[1] || "";
-            // اگر ستون C و D خالی بود، مقدار پیش‌فرض بگذار
-            const title = (cleanRow[2] && cleanRow[2] !== "") ? cleanRow[2] : `طرح ${cat}`;
-            const desc = (cleanRow[3] && cleanRow[3] !== "") ? cleanRow[3] : "قابلیت اجرا در سایزهای مختلف";
-            
             if(img && img.startsWith('http')) {
                 result.push({
-                    id: `ART-${1000 + i}`, // تولید کد یکتا
-                    cat, img, title, desc
+                    id: `NANO-${1000 + i}`,
+                    cat, img, title, desc, price, discount
                 });
             }
         }
@@ -78,41 +87,70 @@ function parseCSV(csv) {
     return result;
 }
 
-// تولید تگ‌های دسته‌بندی
-function generateTags() {
-    const tags = new Set(['همه']);
-    portfolioData.forEach(p => tags.add(p.cat));
-    const container = document.getElementById('tagContainer');
-    container.innerHTML = '';
+// 3. اسلایدر بالای صفحه
+function initSlider() {
+    const wrapper = document.getElementById('slider-wrapper');
+    // انتخاب 5 آیتم تصادفی یا اول برای اسلایدر
+    const slides = portfolioData.slice(0, 5);
+    
+    slides.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'swiper-slide';
+        div.innerHTML = `
+            <img src="${item.img}" alt="${item.title}">
+            <div class="slide-caption">${item.title}</div>
+        `;
+        wrapper.appendChild(div);
+    });
 
-    tags.forEach(tag => {
-        const btn = document.createElement('button');
-        btn.className = tag === 'همه' ? 'tag-btn active' : 'tag-btn';
-        btn.innerText = tag;
-        btn.onclick = () => {
-            document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            filterData(tag === 'همه' ? '' : tag);
-        }
-        container.appendChild(btn);
+    new Swiper(".mySwiper", {
+        loop: true,
+        autoplay: { delay: 3000 },
+        pagination: { el: ".swiper-pagination" },
     });
 }
 
-// ساخت کارت‌های گالری
+// 4. تب‌های پوشه‌ای (Folder Tabs)
+function renderFolderTabs() {
+    const cats = ['همه', ...new Set(portfolioData.map(p => p.cat))];
+    const container = document.getElementById('tagContainer');
+    
+    cats.forEach(cat => {
+        // پیدا کردن تصویر اول برای آیکون پوشه
+        const sample = cat === 'همه' ? portfolioData[0] : portfolioData.find(p => p.cat === cat);
+        const icon = sample ? sample.img : '';
+
+        const div = document.createElement('div');
+        div.className = `folder-tab ${cat === 'همه' ? 'active' : ''}`;
+        div.innerHTML = `<img src="${icon}"> ${cat}`;
+        div.onclick = () => {
+            document.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
+            div.classList.add('active');
+            filterData(cat === 'همه' ? '' : cat);
+        }
+        container.appendChild(div);
+    });
+}
+
+// 5. رندر گالری
 function renderGallery(data) {
     const grid = document.getElementById('gallery-view');
     grid.innerHTML = '';
     data.forEach(item => {
+        const hasDiscount = item.discount && item.discount !== "0";
+        const displayPrice = hasDiscount ? item.discount : item.price;
+        const formattedPrice = displayPrice === "0" ? "توافقی" : parseInt(displayPrice).toLocaleString() + " ت";
+
         const card = document.createElement('div');
         card.className = 'art-card';
         card.innerHTML = `
             <div class="card-img-wrap">
-                <div class="card-badge">${item.cat}</div>
-                <img src="${item.img}" class="card-img" loading="lazy" alt="${item.title}">
+                <img src="${item.img}" loading="lazy">
+                <div class="card-badge-price">${formattedPrice}</div>
             </div>
-            <div class="card-content">
-                <div class="card-title">${item.title}</div>
-                <div class="card-desc">${item.desc}</div>
+            <div class="card-info">
+                <h3 class="card-title">${item.title}</h3>
+                <small style="color:var(--text-muted)">${item.cat}</small>
             </div>
         `;
         card.onclick = () => openModal(item);
@@ -120,122 +158,169 @@ function renderGallery(data) {
     });
 }
 
-// فیلتر و جستجو
-function filterData(query) {
-    const term = query.toLowerCase();
-    currentData = portfolioData.filter(item => 
-        item.cat.toLowerCase().includes(term) || 
-        item.title.toLowerCase().includes(term) ||
-        item.id.toLowerCase().includes(term)
-    );
-    renderGallery(currentData);
-    currentBookPage = 0;
-    renderBook(currentData);
-}
-
-document.getElementById('searchInput').addEventListener('input', (e) => filterData(e.target.value));
-
-// سوئیچ بین گالری و کتاب
-function switchView(view) {
-    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    
-    if(view === 'gallery') {
-        document.getElementById('gallery-view').style.display = 'grid';
-        document.getElementById('book-view').style.display = 'none';
-    } else {
-        document.getElementById('gallery-view').style.display = 'none';
-        document.getElementById('book-view').style.display = 'flex';
-    }
-}
-
-// --- بخش مودال (نمایش جزئیات) ---
-let currentItem = null;
-const modal = document.getElementById('detailModal');
-
+// 6. مودال و جزئیات
+let currentModalItem = null;
 function openModal(item) {
-    currentItem = item;
+    currentModalItem = item;
+    const m = document.getElementById('detailModal');
+    
     document.getElementById('m-img').src = item.img;
-    document.getElementById('m-code').innerText = item.id;
     document.getElementById('m-title').innerText = item.title;
+    document.getElementById('m-code').innerText = item.id;
     document.getElementById('m-desc').innerText = item.desc;
-    
-    // ساخت متن پیام آماده
-    const msg = `سلام، من می‌خواهم طرح با کد *${item.id}* (${item.title}) را سفارش دهم.`;
-    
-    // تنظیم لینک دکمه‌ها
-    document.getElementById('m-whatsapp').href = `https://wa.me/${ADMIN_PHONE}?text=${encodeURIComponent(msg)}`;
-    document.getElementById('m-telegram').href = `https://t.me/${TELEGRAM_ID}?text=${encodeURIComponent(msg)}`;
 
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
+    // قیمت
+    const box = document.getElementById('m-price-box');
+    if(item.discount && item.discount !== "0") {
+        box.innerHTML = `${parseInt(item.discount).toLocaleString()} تومان <span class="old-price">${parseInt(item.price).toLocaleString()}</span>`;
+    } else {
+        box.innerHTML = item.price === "0" ? "قیمت: توافقی" : `${parseInt(item.price).toLocaleString()} تومان`;
+    }
+
+    // تولید دکمه‌های سوشال
+    const socialDiv = document.getElementById('socialLinksContainer');
+    socialDiv.innerHTML = `
+        <a href="${generateLink('whatsapp', item)}" target="_blank" class="soc-btn wa"><img src="${LOGOS.wa}"> واتساپ</a>
+        <a href="${generateLink('telegram', item)}" target="_blank" class="soc-btn tg"><img src="${LOGOS.tg}"> تلگرام</a>
+        <a href="${generateLink('eitaa', item)}" target="_blank" class="soc-btn ei"><img src="${LOGOS.ei}"> ایتا</a>
+        <a href="${generateLink('rubika', item)}" target="_blank" class="soc-btn ru"><img src="${LOGOS.ru}"> روبیکا</a>
+        <a href="${generateLink('bale', item)}" target="_blank" class="soc-btn ba"><img src="${LOGOS.ba}"> بله</a>
+        <a href="${generateLink('instagram', item)}" target="_blank" class="soc-btn ig"><img src="${LOGOS.ig}"> اینستاگرام</a>
+    `;
+
+    m.style.display = 'flex';
 }
 
-function closeModal() {
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 300);
-}
+function generateLink(platform, itemOrList) {
+    let msg = "";
+    if(Array.isArray(itemOrList)) {
+        // حالت سبد خرید
+        msg = `سلام، درخواست سفارش/مشاوره برای لیست زیر را دارم:\n\n`;
+        itemOrList.forEach((i, idx) => {
+            msg += `${idx+1}. کد: ${i.id} | ${i.title}\n`;
+        });
+        msg += `\nتعداد کل: ${itemOrList.length} مورد`;
+    } else {
+        // حالت تکی
+        msg = `سلام، در مورد طرح کد *${itemOrList.id}* (${itemOrList.title}) سوال/سفارش دارم.`;
+    }
 
-function copyCode() {
-    if(currentItem) {
-        navigator.clipboard.writeText(currentItem.id);
-        const btn = document.querySelector('.btn-copy');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check"></i> کپی شد';
-        setTimeout(() => btn.innerHTML = originalText, 2000);
+    // اضافه کردن کد بازاریاب
+    if(marketerCode) msg += `\n\n(کد معرف: ${marketerCode})`;
+
+    const encMsg = encodeURIComponent(msg);
+
+    switch(platform) {
+        case 'whatsapp': return `https://wa.me/${CONTACT_INFO.whatsapp_id}?text=${encMsg}`;
+        case 'telegram': return `https://t.me/${CONTACT_INFO.telegram_id}?text=${encMsg}`;
+        case 'eitaa': return `https://eitaa.com/${CONTACT_INFO.eitaa_id}`; // ایتا پیام مستقیم در لینک ساپورت نمیکند، می‌رود پروفایل
+        case 'rubika': return `https://rubika.ir/${CONTACT_INFO.rubika_id}`;
+        case 'bale': return `https://ble.ir/${CONTACT_INFO.bale_id}`;
+        case 'instagram': return `https://ig.me/m/${CONTACT_INFO.instagram_id}`;
+        default: return "#";
     }
 }
 
-// بستن مودال با کلیک بیرون
-modal.onclick = (e) => { if(e.target === modal) closeModal(); }
+// 7. سبد خرید
+function addToCartFromModal() {
+    if(!currentModalItem) return;
+    if(!cart.find(i => i.id === currentModalItem.id)) {
+        cart.push(currentModalItem);
+        updateCartUI();
+        alert('به لیست سفارش اضافه شد');
+    } else {
+        alert('این مورد قبلا اضافه شده است');
+    }
+}
 
-// --- بخش کتاب (Flipbook) ---
+function updateCartUI() {
+    document.getElementById('cart-count').innerText = cart.length;
+    const list = document.getElementById('cartItems');
+    list.innerHTML = '';
+    let total = 0;
+
+    cart.forEach((item, index) => {
+        const price = (item.discount && item.discount!=="0") ? parseInt(item.discount) : parseInt(item.price);
+        total += isNaN(price) ? 0 : price;
+
+        list.innerHTML += `
+            <div class="cart-item">
+                <img src="${item.img}">
+                <div style="flex-grow:1">
+                    <div style="font-size:0.9rem; font-weight:bold">${item.title}</div>
+                    <div style="font-size:0.8rem; color:#888">${item.id}</div>
+                </div>
+                <button onclick="removeFromCart(${index})" style="background:none; border:none; color:red;">🗑</button>
+            </div>
+        `;
+    });
+    
+    document.getElementById('cartTotal').innerText = `جمع حدودی: ${total.toLocaleString()} تومان`;
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartUI();
+}
+
+function toggleCart() {
+    document.getElementById('cartPanel').classList.toggle('open');
+}
+
+function checkout(platform) {
+    if(cart.length === 0) return alert("لیست خالی است!");
+    const link = generateLink(platform, cart);
+    window.open(link, '_blank');
+}
+
+// 8. ابزارهای عمومی
+function toggleTheme() {
+    const body = document.body;
+    if(body.getAttribute('data-theme') === 'dark') body.setAttribute('data-theme', 'light');
+    else body.setAttribute('data-theme', 'dark');
+}
+
+function filterData(term) {
+    if(term === '') {
+        renderGallery(portfolioData);
+        renderBook(portfolioData);
+        return;
+    }
+    const filtered = portfolioData.filter(i => i.cat === term || i.title.includes(term) || i.id.includes(term));
+    renderGallery(filtered);
+    renderBook(filtered);
+}
+
+function toggleFullScreen() {
+    const elem = document.getElementById('m-img');
+    if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {});
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+function switchView(v) {
+    document.getElementById('gallery-view').style.display = v === 'gallery' ? 'grid' : 'none';
+    document.getElementById('book-view').style.display = v === 'book' ? 'flex' : 'none';
+}
+
+// 9. Flipbook ساده + صدا
 function renderBook(data) {
     const container = document.getElementById('bookContainer');
     container.innerHTML = '';
-    
-    // صفحه جلد
-    container.appendChild(createPage(`
-        <h2 style="color:var(--primary-color)">ژورنال آثار</h2>
-        <p>${data.length} طرح موجود</p>
-        <p style="font-size:0.8rem; color:#666; margin-top:20px;">برای ورق زدن کلیک کنید</p>
-    `, 0));
-
-    data.forEach((item, index) => {
-        const html = `
-            <img src="${item.img}" style="max-width:90%; max-height:50%; margin-bottom:10px; border-radius:5px; object-fit:contain;">
-            <h3 style="font-size:1rem; margin:5px 0; text-align:center;">${item.title}</h3>
-            <span style="color:var(--primary-color); font-family:monospace; background:rgba(0,0,0,0.5); padding:2px 5px; border-radius:3px;">${item.id}</span>
-        `;
-        container.appendChild(createPage(html, index + 1));
+    data.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'book-page';
+        div.style.zIndex = data.length - i;
+        div.innerHTML = `<img src="${item.img}" style="max-width:100%; max-height:80%"><p>${item.title}</p>`;
+        div.onclick = () => flipPage(div);
+        container.appendChild(div);
     });
-    
-    const pages = document.querySelectorAll('.book-page');
-    pages.forEach((p, i) => p.style.zIndex = pages.length - i);
 }
-
-function createPage(content, idx) {
-    const div = document.createElement('div');
-    div.className = 'book-page';
-    div.innerHTML = content;
-    // قابلیت ورق زدن با کلیک روی خود صفحه
-    div.onclick = () => {
-        if(!div.classList.contains('flipped')) nextPage();
-        else prevPage();
-    };
-    return div;
+function flipPage(el) {
+    el.classList.toggle('flipped');
+    document.getElementById('page-flip-sound').play();
 }
-
-function nextPage() {
-    const pages = document.querySelectorAll('.book-page');
-    if(currentBookPage < pages.length) {
-        pages[currentBookPage].classList.add('flipped');
-        currentBookPage++;
-    }
-}
-function prevPage() {
-    if(currentBookPage > 0) {
-        currentBookPage--;
-        document.querySelectorAll('.book-page')[currentBookPage].classList.remove('flipped');
-    }
-}
+// (توابع next/prev برای دکمه‌های پایین کتاب هم باید اضافه شوند که مشابه flipPage عمل کنند)
