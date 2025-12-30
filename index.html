@@ -3,29 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>آلبوم دیجیتال</title>
+    <title>آلبوم دیجیتال متصل به Cloudinary</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>آلبوم دیجیتال</h1>
-        <div class="filters">
-            <button class="filter-btn active" onclick="filterGallery('all')">همه</button>
-            <button class="filter-btn" onclick="filterGallery('portrait')">پرتره</button>
-            <button class="filter-btn" onclick="filterGallery('landscape')">منظره</button>
-        </div>
-    </header>
 
-    <div class="gallery-container" id="gallery">
-        <!-- گالری اینجا ساخته می‌شود -->
+    <div class="main-container">
+        <h1>آلبوم دیجیتال آنلاین</h1>
+        <!-- کانتینری که آلبوم‌ها (دسته‌بندی‌ها) در آن ساخته می‌شوند -->
+        <div class="albums" id="albums-container">
+            <!-- آلبوم‌ها توسط جاوااسکریپت اینجا قرار می‌گیرند -->
+            <p style="text-align:center; width:100%;">در حال بارگذاری اطلاعات...</p>
+        </div>
     </div>
 
-    <div id="lightbox" class="lightbox">
-        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
-        <div id="lightbox-content"></div>
-        <div class="lightbox-details">
-            <h3 id="lb-code" style="color:var(--accent-color)"></h3>
-            <p id="lb-desc"></p>
+    <!-- این مودال (پنجره بازشو) برای نمایش گالری هر آلبوم است -->
+    <div id="gallery-modal" class="album-viewer">
+        <div class="viewer-content">
+            <button class="close" onclick="closeModal()">بستن</button>
+            <h2 id="modal-title">عنوان آلبوم</h2>
+            <div id="modal-images" class="modal-gallery-grid">
+                <!-- عکس‌های داخل آلبوم اینجا قرار می‌گیرند -->
+            </div>
         </div>
     </div>
 
