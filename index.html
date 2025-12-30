@@ -3,96 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="ژورنال دیجیتال استودیو نانومتریک - نمایش نمونه کارهای هنری، ترمیم عکس و طراحی">
-    <title>ژورنال دیجیتال نانومتریک | NanoMetric Art Gallery</title>
+    <meta name="description" content="ژورنال دیجیتال استودیو نانومتریک">
+    <title>ژورنال نانومتریک | NanoMetric Gallery</title>
     
     <!-- فونت وزیر -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    
     <!-- آیکون‌ها -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- اسلایدر Swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     
-    <!-- استایل اصلی -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-theme="dark">
 
-    <!-- بخش معرفی (Hero) -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1 class="brand-title">NANOMETRIC</h1>
-            <p class="brand-subtitle">استودیو تخصصی پردازش هنر دیجیتال و هوش مصنوعی</p>
-            <div class="social-links">
-                <!-- لینک‌های شبکه‌های اجتماعی -->
-                <a href="https://instagram.com/" target="_blank" class="social-btn"><i class="fab fa-instagram"></i></a>
-                <a href="https://t.me/" target="_blank" class="social-btn"><i class="fab fa-telegram"></i></a>
-                <a href="#" class="social-btn"><i class="fas fa-phone"></i></a>
+    <!-- صدای ورق زدن -->
+    <audio id="page-flip-sound" src="https://www.soundjay.com/books/sounds/page-flip-01a.mp3"></audio>
+
+    <!-- هدر و اسلایدر -->
+    <header class="main-header">
+        <div class="header-top">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" alt="NanoMetric Logo" class="brand-logo">
+            
+            <div class="theme-toggle">
+                <input type="checkbox" id="theme-switch" onchange="toggleTheme()">
+                <label for="theme-switch" class="theme-label">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </label>
             </div>
         </div>
-    </section>
 
-    <!-- کنترل‌ها (چسبنده) -->
+        <!-- اسلایدر ویژه -->
+        <div class="swiper mySwiper">
+            <div class="swiper-wrapper" id="slider-wrapper">
+                <!-- اسلایدها توسط JS پر می‌شوند -->
+            </div>
+            <div class="swiper-pagination"></div>
+        </div>
+    </header>
+
+    <!-- کنترل‌ها و تگ‌های پوشه‌ای -->
     <div class="controls-sticky">
         <div class="controls-inner">
-            <div class="top-row">
-                <input type="text" id="searchInput" class="search-box" placeholder="جستجو (کد، نام طرح)...">
+            <div class="search-row">
+                <input type="text" id="searchInput" class="search-box" placeholder="جستجو در ژورنال...">
                 <div class="view-toggles">
-                    <button class="view-btn active" onclick="switchView('gallery')"><i class="fas fa-th"></i> گالری</button>
-                    <button class="view-btn" onclick="switchView('book')"><i class="fas fa-book-open"></i> ژورنال</button>
+                    <button class="view-btn active" onclick="switchView('gallery')"><i class="fas fa-th-large"></i></button>
+                    <button class="view-btn" onclick="switchView('book')"><i class="fas fa-book-open"></i></button>
                 </div>
             </div>
-            <div class="filter-tags" id="tagContainer">
-                <!-- تگ‌ها اینجا توسط JS ساخته می‌شوند -->
+            
+            <!-- تگ‌های پوشه‌ای -->
+            <div class="folder-tabs" id="tagContainer">
+                <!-- تگ‌ها اینجا ساخته می‌شوند -->
             </div>
         </div>
     </div>
 
-    <!-- لودینگ -->
-    <div id="loading-view">
-        <span class="loader"></span>
-        <p>در حال دریافت جدیدترین طرح‌ها...</p>
+    <!-- بدنه اصلی -->
+    <main>
+        <div id="loading-view">
+            <div class="loader"></div>
+        </div>
+
+        <div id="gallery-view" class="gallery-grid"></div>
+
+        <div id="book-view">
+            <div class="book-wrapper" id="bookContainer"></div>
+            <div class="book-controls">
+                <button class="nav-btn prev" onclick="prevPage()">❮</button>
+                <button class="nav-btn next" onclick="nextPage()">❯</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- سبد خرید شناور -->
+    <div class="floating-cart" onclick="toggleCart()">
+        <i class="fas fa-shopping-basket"></i>
+        <span id="cart-count" class="cart-badge">0</span>
     </div>
 
-    <!-- نمای گالری -->
-    <div id="gallery-view" style="display: none;"></div>
-
-    <!-- نمای کتاب (Flipbook) -->
-    <div id="book-view">
-        <div class="book-wrapper" id="bookContainer"></div>
-        <div class="book-nav-btns">
-            <button class="view-btn" onclick="prevPage()">صفحه قبل</button>
-            <button class="view-btn" onclick="nextPage()">صفحه بعد</button>
+    <!-- پنل کشویی سبد خرید -->
+    <div class="cart-panel" id="cartPanel">
+        <div class="cart-header">
+            <h3>لیست سفارشات</h3>
+            <button onclick="toggleCart()" class="close-cart">×</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <p class="empty-cart-msg">لیست خالی است</p>
+        </div>
+        <div class="cart-footer">
+            <div class="total-price" id="cartTotal">جمع: 0 تومان</div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">ارسال لیست جهت مشاوره یا خرید:</p>
+            <div class="social-grid-mini">
+                <button onclick="checkout('whatsapp')" class="soc-btn mini wa"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767115995/25-256308_whatsapp-social-media-icons-whatsapp_o9zkit.png"></button>
+                <button onclick="checkout('telegram')" class="soc-btn mini tg"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767113676/telgrampng.parspng.com__rzuqpw.png"></button>
+                <button onclick="checkout('eitaa')" class="soc-btn mini ei"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767111952/Eitaa-vector-logo_1221133400_we5m5l.png"></button>
+                <button onclick="checkout('rubika')" class="soc-btn mini ru"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112404/Rubika_Icon_zlc48h.png"></button>
+                <button onclick="checkout('bale')" class="soc-btn mini ba"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112210/bale-color_a9gfhw.png"></button>
+            </div>
         </div>
     </div>
 
-    <!-- مودال جزئیات -->
+    <!-- مودال جزئیات محصول -->
     <div class="modal" id="detailModal">
         <div class="modal-body">
             <button class="close-modal" onclick="closeModal()">×</button>
             <div class="modal-img-wrap">
-                <img id="m-img" class="modal-img" src="" alt="">
+                <img id="m-img" class="modal-img" src="">
+                <button class="fullscreen-btn" onclick="toggleFullScreen()"><i class="fas fa-expand"></i></button>
             </div>
             <div class="modal-info">
-                <span id="m-code" class="modal-code"></span>
+                <div class="price-box" id="m-price-box"></div>
                 <h2 id="m-title" class="modal-title"></h2>
+                <span id="m-code" class="modal-code"></span>
                 <p id="m-desc" class="modal-desc"></p>
                 
-                <div class="action-buttons">
-                    <button class="btn-action btn-copy" onclick="copyCode()">
-                        <i class="fas fa-copy"></i> کپی کد
+                <div class="cta-section">
+                    <button class="add-to-cart-btn" onclick="addToCartFromModal()">
+                        <i class="fas fa-plus"></i> افزودن به لیست
                     </button>
-                    <a id="m-whatsapp" href="#" target="_blank" class="btn-action btn-whatsapp">
-                        <i class="fab fa-whatsapp"></i> سفارش واتساپ
-                    </a>
+                    <p class="cta-help">برای مشاوره یا خرید، روی یکی از پیام‌رسان‌ها کلیک کنید:</p>
+                    <div class="social-grid-main" id="socialLinksContainer">
+                        <!-- دکمه‌ها داینامیک ساخته می‌شوند -->
+                    </div>
                 </div>
-                <a id="m-telegram" href="#" target="_blank" class="telegram-link">
-                    یا سفارش در تلگرام <i class="fab fa-telegram"></i>
-                </a>
             </div>
         </div>
     </div>
 
-    <!-- اسکریپت اصلی -->
+    <!-- فوتر -->
+    <footer>
+        <div class="footer-logo">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" alt="NanoMetric">
+        </div>
+        <div class="social-slider">
+            <a href="https://instagram.com/nanometriclab" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://t.me/NanoMetricLab" target="_blank"><i class="fab fa-telegram"></i></a>
+            <a href="https://eitaa.com/nanometriclab" target="_blank"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767111952/Eitaa-vector-logo_1221133400_we5m5l.png" class="tiny-icon"></a>
+            <a href="https://rubika.ir/nanometriclab" target="_blank"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112404/Rubika_Icon_zlc48h.png" class="tiny-icon"></a>
+        </div>
+        <p>© 2025 NanoMetric Digital Art Lab</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
