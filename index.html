@@ -3,28 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>آلبوم دیجیتال متصل به Cloudinary</title>
+    <title>ژورنال دیجیتال آژانس هنری</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <div class="main-container">
-        <h1>آلبوم دیجیتال آنلاین</h1>
-        <!-- کانتینری که آلبوم‌ها (دسته‌بندی‌ها) در آن ساخته می‌شوند -->
-        <div class="albums" id="albums-container">
-            <!-- آلبوم‌ها توسط جاوااسکریپت اینجا قرار می‌گیرند -->
-            <p style="text-align:center; width:100%;">در حال بارگذاری اطلاعات...</p>
+    <header>
+        <h1>ژورنال هنری دیجیتال</h1>
+        <input type="text" id="searchInput" class="search-box" placeholder="جستجو...">
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterGallery('all')">همه</button>
+            <button class="filter-btn" onclick="filterGallery('portrait')">پرتره</button>
+            <button class="filter-btn" onclick="filterGallery('landscape')">منظره</button>
+            <button class="filter-btn" onclick="filterGallery('video')">ویدیو</button>
+            <button class="filter-btn" onclick="filterGallery('square')">مربعی</button>
         </div>
+    </header>
+
+    <div class="gallery-container" id="gallery">
+        <!-- آیتم ها توسط جاوااسکریپت اینجا ساخته می‌شوند -->
     </div>
 
-    <!-- این مودال (پنجره بازشو) برای نمایش گالری هر آلبوم است -->
-    <div id="gallery-modal" class="album-viewer">
-        <div class="viewer-content">
-            <button class="close" onclick="closeModal()">بستن</button>
-            <h2 id="modal-title">عنوان آلبوم</h2>
-            <div id="modal-images" class="modal-gallery-grid">
-                <!-- عکس‌های داخل آلبوم اینجا قرار می‌گیرند -->
-            </div>
+    <div id="lightbox" class="lightbox">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div id="lightbox-content"></div>
+        <div class="lightbox-details">
+            <h3 id="lb-code" style="color:var(--accent-color)"></h3>
+            <p id="lb-desc"></p>
         </div>
     </div>
 
