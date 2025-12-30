@@ -102,4 +102,50 @@
     <!-- مودال جزئیات -->
     <div class="modal" id="modal">
         <div class="modal-box">
-            <button class="modal-close" onclick="closeM
+            <button class="modal-close" onclick="closeModal()">بازگشت</button>
+            <div class="modal-img-area">
+                <img id="m-img" src="">
+                <button class="zoom-toggle" onclick="toggleZoom()"><i class="fas fa-search-plus"></i></button>
+            </div>
+            
+            <div class="modal-data">
+                <div class="stat-bar">
+                    <span><i class="fas fa-eye"></i> <b id="m-view"></b></span>
+                    <span><i class="fas fa-heart" style="color:crimson"></i> <b id="m-like"></b></span>
+                    <span style="color:gold">👑 <b id="m-rate">4.9</b></span>
+                </div>
+                
+                <div class="price-tag" id="m-price"></div>
+                <h2 id="m-title"></h2>
+                <div class="code-copy" onclick="copyCode()">
+                    <span id="m-code"></span> <i class="far fa-copy"></i>
+                </div>
+                <p id="m-desc"></p>
+
+                <div class="modal-actions">
+                    <button class="btn-add" onclick="addToCartModal()">افزودن به سبد</button>
+                    <p style="font-size:0.8rem; margin:10px 0;">سفارش سریع از طریق:</p>
+                    <div class="social-grid" id="modal-socials"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نمایشگر فول اسکرین -->
+    <div id="fs-viewer" onclick="toggleZoom()">
+        <img id="fs-img" src="">
+    </div>
+
+    <!-- فوتر -->
+    <footer>
+        <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" class="f-logo">
+        <div class="f-socials">
+            <a href="https://instagram.com/nanometriclab"><i class="fab fa-instagram"></i></a>
+            <a href="https://t.me/NanoMetricLab"><i class="fab fa-telegram"></i></a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
