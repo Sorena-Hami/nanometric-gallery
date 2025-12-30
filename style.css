@@ -1,105 +1,178 @@
-/* استایل عمومی */
+:root {
+    --bg-color: #0f0f12;
+    --card-bg: #1a1a1f;
+    --primary-color: #00f2ff; /* آبی فیروزه‌ای نئونی */
+    --secondary-color: #7000ff; /* بنفش */
+    --text-color: #f0f0f0;
+    --text-muted: #aaaaaa;
+}
+
+* { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+
 body {
-    font-family: 'Vazir', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-    color: #333;
+    font-family: 'Vazirmatn', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0; padding: 0;
+    overflow-x: hidden;
+    line-height: 1.6;
 }
 
-h1 {
+/* --- Hero Section --- */
+.hero {
+    background: linear-gradient(135deg, rgba(0,0,0,0.9), rgba(20,20,30,0.95)), url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 60px 20px;
     text-align: center;
-    margin-top: 20px;
-    font-size: 2rem;
+    border-bottom: 2px solid var(--primary-color);
+    box-shadow: 0 10px 30px rgba(0, 242, 255, 0.1);
+}
+.hero-content { max-width: 800px; margin: 0 auto; }
+.brand-title {
+    font-size: 2.5rem; margin: 0;
+    background: linear-gradient(90deg, var(--primary-color), #ffffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+}
+.brand-subtitle { color: #ccc; margin-top: 10px; }
+
+.social-links { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+.social-btn {
+    background: rgba(255,255,255,0.1); color: white;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; transition: 0.3s;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.social-btn:hover { background: var(--primary-color); color: #000; transform: scale(1.1); }
+
+/* --- Controls --- */
+.controls-sticky {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15, 15, 18, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+.controls-inner { max-width: 1200px; margin: 0 auto; padding: 0 15px; display: flex; flex-direction: column; gap: 15px; }
+.top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.search-box {
+    background: #2a2a30; border: 1px solid #444;
+    padding: 10px 20px; border-radius: 50px;
+    color: white; flex-grow: 1; max-width: 400px;
+    transition: 0.3s;
+}
+.search-box:focus { border-color: var(--primary-color); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
+
+.view-toggles { display: flex; gap: 5px; }
+.view-btn {
+    background: transparent; border: 1px solid #444; color: #888;
+    padding: 8px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 0.9rem;
+}
+.view-btn.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); font-weight: bold; }
+
+.filter-tags {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;
+    scrollbar-width: none;
+}
+.filter-tags::-webkit-scrollbar { display: none; }
+.tag-btn {
+    background: #25252b; color: #ccc; border: 1px solid #333;
+    padding: 6px 16px; border-radius: 12px; cursor: pointer; white-space: nowrap; font-size: 0.85rem;
+    transition: 0.2s;
+}
+.tag-btn.active { background: var(--secondary-color); color: white; border-color: var(--secondary-color); }
+
+/* --- Gallery --- */
+#gallery-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* موبایل */
+    gap: 15px;
+    max-width: 1200px; margin: 20px auto; padding: 10px;
+}
+@media (min-width: 768px) {
+    #gallery-view { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
 }
 
-/* استایل آلبوم‌ها */
-.album-container {
-    text-align: center;
-    padding: 20px;
+.art-card {
+    background: var(--card-bg); border-radius: 16px; overflow: hidden;
+    border: 1px solid #333; position: relative; cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+.art-card:hover { transform: translateY(-7px); box-shadow: 0 15px 30px rgba(0,0,0,0.4); border-color: var(--primary-color); }
 
-.albums {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
+.card-img-wrap { position: relative; padding-top: 100%; overflow: hidden; }
+.card-img {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; transition: transform 0.5s;
 }
+.art-card:hover .card-img { transform: scale(1.08); }
 
-.album {
-    width: 150px;
-    text-align: center;
-    cursor: pointer;
+.card-content { padding: 15px; position: relative; }
+.card-badge {
+    position: absolute; top: -12px; left: 15px;
+    background: var(--primary-color); color: #000;
+    padding: 4px 10px; border-radius: 8px;
+    font-size: 0.75rem; font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
+.card-title { font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; }
+.card-desc { font-size: 0.8rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-.thumbnail {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
+/* --- Modal --- */
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); z-index: 2000;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s;
 }
+.modal.show { opacity: 1; }
+.modal-body {
+    background: #18181b; width: 95%; max-width: 500px;
+    border-radius: 20px; overflow: hidden;
+    border: 1px solid #333; position: relative;
+    animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(50px); } to { transform: translateY(0); } }
+.modal-img-wrap { width: 100%; height: 300px; background: #000; display: flex; align-items: center; justify-content: center; }
+.modal-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.modal-info { padding: 25px; text-align: center; }
+.modal-code { display: inline-block; background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; margin-bottom: 10px; color: var(--primary-color); font-family: monospace; letter-spacing: 1px; }
+.action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.btn-action {
+    border: none; padding: 12px; border-radius: 12px;
+    font-family: inherit; font-weight: bold; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+}
+.btn-whatsapp { background: #25D366; color: white; }
+.btn-copy { background: #333; color: white; }
+.telegram-link { display:block; margin-top:15px; color:#0088cc; text-decoration:none; font-size:0.9rem; }
+.close-modal { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
 
-.album p {
-    margin-top: 10px;
-    font-size: 1.1rem;
+/* --- Flipbook --- */
+#book-view {
+    display: none; height: 70vh;
+    justify-content: center; align-items: center; margin-top: 30px;
+    perspective: 2000px;
 }
+.book-wrapper { position: relative; width: 300px; height: 450px; transform-style: preserve-3d; }
+@media(min-width: 768px) { .book-wrapper { width: 450px; height: 600px; } }
+.book-page {
+    position: absolute; width: 100%; height: 100%; top: 0; right: 0;
+    background: #222; border: 1px solid #444; border-radius: 4px;
+    transform-origin: right center; transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 20px; box-shadow: -5px 5px 15px rgba(0,0,0,0.3);
+    backface-visibility: hidden;
+}
+.book-page.flipped { transform: rotateY(180deg); }
+.book-nav-btns { position: absolute; bottom: -60px; width: 100%; display: flex; justify-content: center; gap: 20px; }
 
-/* استایل آلبوم بزرگ */
-.album-viewer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.viewer-content {
-    background: #fff;
-    padding: 20px;
-    text-align: center;
-    border-radius: 8px;
-    position: relative;
-    max-width: 600px;
-    width: 80%;
-}
-
-.viewer-content img {
-    width: 100%;
-    height: auto;
-    max-width: 500px;
-    margin: 20px 0;
-}
-
-.copy-code {
-    background-color: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.copy-code:hover {
-    background-color: #45a049;
-}
-
-.close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: #333;
-}
-
-/* استایل برای حالت نمایش */
-.album-viewer.show {
-    display: flex;
-}
+/* Loading */
+.loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: var(--primary-color); border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; margin-top: 50px; }
+@keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#loading-view { text-align: center; padding: 50px; }
