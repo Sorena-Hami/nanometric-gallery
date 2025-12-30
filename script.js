@@ -1,208 +1,122 @@
-// *** تنظیمات ***
+const portfolioItems = [
+    // اینجا لیست عکس‌ها و ویدیوها باید وارد بشه
+    {
+        id: "ART-101",
+        type: "image",
+        category: "portrait",
+        tags: "زن, کلاسیک, سیاه سفید",
+        url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=500&q=60",
+        desc: "پرتره کلاسیک سیاه و سفید"
+    },
+    {
+        id: "VID-202",
+        type: "video",
+        category: "video",
+        tags: "موشن, تبلیغاتی",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        desc: "نمونه موشن گرافیک تبلیغاتی"
+    },
+    {
+        id: "ART-103",
+        type: "image",
+        category: "landscape",
+        tags: "طبیعت, دریا, غروب",
+        url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=500&q=60",
+        desc: "عکاسی منظره غروب"
+    },
+    {
+        id: "ART-104",
+        type: "image",
+        category: "square",
+        tags: "لوگو, مینیمال",
+        url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=500&q=60",
+        desc: "طراحی لوگو مینیمال"
+    }
+];
 
-// لینک CSV گوگل شیت خود را در خط زیر جایگزین کنید
+const gallery = document.getElementById('gallery');
+const searchInput = document.getElementById('searchInput');
 
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/103cZAMY3lFK797NZ3-BforE30EZWXydOpGewxrlP4FI/edit?usp=sharing';
+function renderGallery(items) {
+    gallery.innerHTML = '';
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'gallery-item';
+        
+        let mediaContent = '';
+        if(item.type === 'video') {
+            mediaContent = `<video src="${item.url}" muted onmouseover="this.play()" onmouseout="this.pause()"></video>`;
+        } else {
+            mediaContent = `<img src="${item.url}" alt="${item.desc}" loading="lazy">`;
+        }
 
-// متغیری برای ذخیره داده‌های دسته‌بندی شده
+        div.innerHTML = `
+            <div class="media-wrapper" onclick="openLightbox('${item.id}')">
+                ${mediaContent}
+            </div>
+            <div class="item-info">
+                <span class="code-badge">${item.id}</span>
+                <button class="copy-btn" onclick="copyCode('${item.id}')">کپی کد</button>
+            </div>
+        `;
+        gallery.appendChild(div);
+    });
+}
 
-let albumsData = {};
+renderGallery(portfolioItems);
 
-document.addEventListener('DOMContentLoaded', () => {
+function filterGallery(cat) {
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
 
-    fetchData();
+    if (cat === 'all') {
+        renderGallery(portfolioItems);
+    } else {
+        const filtered = portfolioItems.filter(item => item.category === cat);
+        renderGallery(filtered);
+    }
+}
 
+searchInput.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    const filtered = portfolioItems.filter(item => 
+        item.id.toLowerCase().includes(term) || 
+        item.tags.includes(term) ||
+        item.desc.includes(term)
+    );
+    renderGallery(filtered);
 });
 
-async function fetchData() {
+function copyCode(code) {
+    navigator.clipboard.writeText(code);
+    alert('کد ' + code + ' کپی شد!');
+}
 
-    const container = document.getElementById('albums-container');
+const lightbox = document.getElementById('lightbox');
+const lbContent = document.getElementById('lightbox-content');
+const lbCode = document.getElementById('lb-code');
+const lbDesc = document.getElementById('lb-desc');
 
+function openLightbox(id) {
+    const item = portfolioItems.find(i => i.id === id);
+    lbContent.innerHTML = '';
     
-
-    try {
-
-        const response = await fetch(SHEET_URL);
-
-        const data = await response.text();
-
-        
-
-        // تبدیل CSV به آرایه
-
-        const rows = parseCSV(data);
-
-        
-
-        // پردازش داده‌ها (ردیف اول معمولا هدر است، از ردیف دوم شروع می‌کنیم)
-
-        // فرض: ستون 0 = نام دسته بندی | ستون 1 = لینک عکس
-
-        rows.slice(1).forEach((row, index) => {
-
-            const category = row[0] ? row[0].trim() : 'بدون دسته';
-
-            const imageUrl = row[1] ? row[1].trim() : '';
-
-            
-
-            if (imageUrl) {
-
-                if (!albumsData[category]) {
-
-                    albumsData[category] = [];
-
-                }
-
-                // ساخت یک آبجکت برای هر عکس شامل لینک و یک شناسه تولیدی
-
-                albumsData[category].push({
-
-                    url: imageUrl,
-
-                    id: `IMG-${1000 + index}` // تولید کد یکتا مثل IMG-1001
-
-                });
-
-            }
-
-        });
-
-        renderAlbums();
-
-    } catch (error) {
-
-        console.error('Error fetching data:', error);
-
-        container.innerHTML = '<p>خطا در بارگذاری اطلاعات. لطفا لینک گوگل شیت را بررسی کنید.</p>';
-
+    if(item.type === 'video') {
+        lbContent.innerHTML = `<video src="${item.url}" controls autoplay style="max-width:90%; max-height:80vh"></video>`;
+    } else {
+        lbContent.innerHTML = `<img src="${item.url}" style="max-width:90%; max-height:80vh">`;
     }
-
-}
-
-// تابع ساده برای تبدیل CSV به آرایه
-
-function parseCSV(text) {
-
-    return text.split('\n').map(row => row.split(','));
-
-}
-
-// نمایش آلبوم‌ها (دسته‌بندی‌ها) در صفحه اصلی
-
-function renderAlbums() {
-
-    const container = document.getElementById('albums-container');
-
-    container.innerHTML = ''; // پاک کردن پیام لودینگ
-
-    Object.keys(albumsData).forEach(category => {
-
-        const images = albumsData[category];
-
-        if (images.length === 0) return;
-
-        // استفاده از اولین عکس به عنوان کاور آلبوم
-
-        const coverImage = images[0].url;
-
-        const albumDiv = document.createElement('div');
-
-        albumDiv.className = 'album';
-
-        albumDiv.onclick = () => openModal(category);
-
-        albumDiv.innerHTML = `
-
-            <img src="${coverImage}" alt="${category}" class="thumbnail">
-
-            <p>${category}</p>
-
-            <small style="color:#666">(${images.length} تصویر)</small>
-
-        `;
-
-        container.appendChild(albumDiv);
-
-    });
-
-}
-
-// باز کردن مودال و نمایش تصاویر آن دسته
-
-function openModal(category) {
-
-    const modal = document.getElementById('gallery-modal');
-
-    const title = document.getElementById('modal-title');
-
-    const grid = document.getElementById('modal-images');
-
     
-
-    title.innerText = category;
-
-    grid.innerHTML = ''; // پاک کردن محتوای قبلی
-
-    const images = albumsData[category];
-
-    images.forEach(imgObj => {
-
-        const itemDiv = document.createElement('div');
-
-        itemDiv.className = 'gallery-item';
-
-        itemDiv.innerHTML = `
-
-            <img src="${imgObj.url}" loading="lazy" alt="Image">
-
-            <p style="margin: 10px 0 5px; font-weight:bold;">کد: ${imgObj.id}</p>
-
-            <button class="copy-code" onclick="copyToClipboard('${imgObj.id}')">کپی کد</button>
-
-        `;
-
-        
-
-        grid.appendChild(itemDiv);
-
-    });
-
-    modal.style.display = 'flex';
-
+    lbCode.innerText = "کد سفارش: " + item.id;
+    lbDesc.innerText = item.desc;
+    lightbox.style.display = 'flex';
 }
 
-function closeModal() {
-
-    document.getElementById('gallery-modal').style.display = 'none';
-
+function closeLightbox() {
+    lightbox.style.display = 'none';
+    lbContent.innerHTML = ''; // توقف ویدیو
 }
 
-function copyToClipboard(text) {
-
-    navigator.clipboard.writeText(text).then(() => {
-
-        alert("کد کپی شد: " + text);
-
-    }).catch(err => {
-
-        console.error('خطا در کپی:', err);
-
-    });
-
-}
-
-// بستن مودال با کلیک بیرون از کادر
-
-window.onclick = function(event) {
-
-    const modal = document.getElementById('gallery-modal');
-
-    if (event.target == modal) {
-
-        closeModal();
-
-    }
-
-}
-
+lightbox.addEventListener('click', (e) => {
+    if(e.target === lightbox) closeLightbox();
+})
