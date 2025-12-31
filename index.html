@@ -4,42 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ژورنال نانومتریک | NanoMetric Gallery</title>
-
+    
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body data-theme="dark">
 
-    <!-- صدای ورق زدن -->
     <audio id="flip-sound" src="https://www.soundjay.com/books/sounds/page-flip-01a.mp3"></audio>
 
     <!-- نوار FOMO -->
     <div id="fomo-bar">
-        <span class="fomo-text">🔥 تخفیف ویژه ژورنال تا پایان:</span>
+        <span class="blink">🔥 پیشنهاد محدود:</span>
+        <span>تخفیف ویژه ژورنال تا</span>
         <span id="countdown">00:00:00</span>
+        <span>دیگر</span>
     </div>
 
     <!-- لودینگ -->
     <div id="loader-overlay">
         <div class="spinner"></div>
-        <p id="loader-text">در حال بارگذاری ژورنال...</p>
+        <p>در حال بارگذاری گالری...</p>
     </div>
 
     <!-- هدر -->
     <header class="main-header">
         <div class="header-top">
-            <img src="logo.png" class="logo-big">
-            <div class="header-tools">
-                <div class="theme-wrapper">
-                    <input type="checkbox" id="theme-chk" onchange="toggleTheme()">
-                    <label for="theme-chk" class="theme-label">
-                        <i class="fas fa-moon"></i>
-                        <i class="fas fa-sun"></i>
-                        <div class="ball"></div>
-                    </label>
-                </div>
+            <div class="brand-area">
+                <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" class="logo-big">
+                <span class="brand-text">NanoMetric</span>
+            </div>
+            
+            <div class="header-controls">
+                <!-- سوئیچ تم استاندارد -->
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
+                    <span class="slider round">
+                        <i class="fas fa-sun sun-icon"></i>
+                        <i class="fas fa-moon moon-icon"></i>
+                    </span>
+                </label>
             </div>
         </div>
 
@@ -50,132 +55,168 @@
         </div>
     </header>
 
-    <!-- کنترل‌ها -->
+    <!-- ابزارها (چسبنده) -->
     <div class="sticky-tools">
         <div class="search-row">
-            <input type="text" id="searchInput" placeholder="جستجو (کد، نام)...">
+            <input type="text" id="searchInput" placeholder="جستجوی نام، کد، دسته...">
             <div class="sort-box">
                 <select onchange="sortGrid(this.value)">
                     <option value="new">جدیدترین</option>
+                    <option value="cheap">ارزان‌ترین</option>
                     <option value="pop">محبوب‌ترین</option>
-                    <option value="view">پربازدیدترین</option>
                 </select>
             </div>
             <div class="view-icons">
-                <button class="v-btn active" onclick="setView('grid')"><i class="fas fa-th-large"></i></button>
+                <button class="v-btn active" onclick="setView('grid')"><i class="fas fa-th"></i></button>
                 <button class="v-btn" onclick="setView('book')"><i class="fas fa-book-open"></i></button>
             </div>
         </div>
-        <div class="tags-scroll" id="tags-container"></div>
+        <!-- آلبوم‌های بندانگشتی (تگ‌ها) -->
+        <div class="albums-scroll" id="tags-container"></div>
     </div>
 
     <main id="main-area">
-        <!-- گرید -->
         <div id="grid-view" class="gallery-grid"></div>
 
-        <!-- کتاب -->
         <div id="book-view">
-            <div class="book-stage">
-                <div id="book-pages" class="book-core"></div>
-            </div>
-            <div class="book-nav">
-                <button onclick="prevPage()">❮</button>
-                <span id="page-num">جلد</span>
-                <button onclick="nextPage()">❯</button>
+            <div class="book-bg">
+                <div class="book-stage">
+                    <div id="book-pages" class="book-core"></div>
+                </div>
+                <div class="book-nav">
+                    <button onclick="prevPage()">صفحه قبل</button>
+                    <span id="page-num">جلد</span>
+                    <button onclick="nextPage()">صفحه بعد</button>
+                </div>
             </div>
         </div>
     </main>
 
     <!-- دکمه شناور تماس -->
-    <div class="float-contact-wrapper">
-        <div class="contact-options" id="contact-opts">
-            <a href="sms:+989304653535" class="c-opt sms"><i class="fas fa-comment-dots"></i> پیامک</a>
-            <a href="tel:+989304653535" class="c-opt call"><i class="fas fa-phone"></i> تماس</a>
+    <div class="float-wrapper contact-wrapper">
+        <div class="pop-options" id="contact-opts">
+            <a href="sms:+989304653535" class="pop-item sms"><i class="fas fa-comment-alt"></i> پیامک</a>
+            <a href="tel:+989304653535" class="pop-item call"><i class="fas fa-phone-alt"></i> تماس</a>
         </div>
-        <button class="float-btn contact" onclick="toggleContactMenu()">
+        <button class="float-btn contact-btn" onclick="toggleContactMenu()">
             <i class="fas fa-headset"></i>
         </button>
     </div>
 
-    <!-- سبد خرید -->
-    <div class="float-btn cart" onclick="toggleCartPanel()">
-        <i class="fas fa-clipboard-list"></i>
+    <!-- دکمه شناور سبد -->
+    <div class="float-btn cart-btn" onclick="toggleCartPanel()">
+        <i class="fas fa-shopping-bag"></i>
         <span id="cart-badge">0</span>
     </div>
 
-    <!-- پنل کشویی لیست سفارش -->
+    <!-- پنل سبد خرید -->
     <div class="drawer" id="cart-drawer">
         <div class="drawer-header">
-            <h3>لیست مشاوره یا سفارش</h3>
-            <button onclick="toggleCartPanel()"><i class="fas fa-chevron-left"></i></button>
+            <h3>لیست مشاوره و سفارش</h3>
+            <button onclick="toggleCartPanel()"><i class="fas fa-times"></i></button>
         </div>
         <div class="drawer-body" id="cart-list"></div>
         <div class="drawer-footer">
             <div id="cart-total">جمع: 0 تومان</div>
             <div class="drawer-actions">
-                <button class="btn-clear" onclick="clearCart()">پاکسازی همه</button>
-                <button class="btn-close-list" onclick="toggleCartPanel()">بستن لیست</button>
+                <button class="btn-act clear" onclick="clearCart()">پاکسازی همه</button>
+                <button class="btn-act close" onclick="toggleCartPanel()">بستن لیست</button>
             </div>
             <div class="social-mini-row" id="cart-socials"></div>
         </div>
     </div>
 
-    <!-- مودال اصلی -->
+    <!-- مودال نمایش محصول -->
     <div class="modal" id="modal">
         <div class="modal-box">
-            <button class="modal-back" onclick="closeModal()">بازگشت <i class="fas fa-arrow-left"></i></button>
-            <div class="modal-img-area">
+            <button class="modal-close-btn" onclick="closeModal()">✕</button>
+            
+            <div class="modal-img-wrap">
                 <img id="m-img" src="">
-                <button class="zoom-icon" onclick="openFullscreen()"><i class="fas fa-expand"></i></button>
+                <button class="zoom-btn" onclick="openFullscreen()"><i class="fas fa-search-plus"></i></button>
             </div>
-            <div class="modal-content">
-                <div class="stat-row">
+
+            <div class="modal-details">
+                <div class="stat-bar">
                     <span><i class="fas fa-eye"></i> <b id="m-views"></b></span>
-                    <span class="like-box" onclick="likeItem()">
-                        <i class="fas fa-heart" id="like-icon"></i> <b id="m-likes"></b>
-                    </span>
-                    <span class="crown-box" id="m-crown"></span>
+                    <span><i class="fas fa-heart" style="color:red"></i> <b id="m-likes"></b></span>
+                    <span class="crown-row" id="m-crown"></span>
                 </div>
-                <div class="price-row" id="m-price"></div>
+
+                <div class="price-section" id="m-price"></div>
                 <h2 id="m-title"></h2>
-                <div class="copy-box" onclick="copyCode()">
-                    <span>برای کپی کد کلیک کنید:</span> <b id="m-code"></b> <i class="far fa-copy"></i>
+                
+                <div class="code-section" onclick="copyCode()">
+                    <span>کد محصول:</span> <b id="m-code"></b> <i class="far fa-copy"></i>
                 </div>
                 <p id="m-desc"></p>
-                <div class="modal-btns">
-                    <button id="btn-add-list" class="action-btn add" onclick="toggleListState()">
-                        <i class="fas fa-plus-circle"></i> افزودن به لیست
-                    </button>
-                    <p class="guide-text">مشاوره و ثبت سفارش سریع در:</p>
+
+                <div class="modal-buttons">
+                    <button id="btn-add-list" class="main-action-btn" onclick="toggleListState()"></button>
+                    
+                    <div class="share-box">
+                        <button onclick="shareProduct()" class="share-btn"><i class="fas fa-share-alt"></i> اشتراک‌گذاری</button>
+                    </div>
+
+                    <p class="cta-text">مشاوره و ثبت سفارش سریع:</p>
                     <div class="social-grid" id="social-grid"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- نمایشگر تمام صفحه -->
+    <!-- مودال فرم سفارش (جدید) -->
+    <div class="modal" id="order-modal" style="z-index: 300;">
+        <div class="modal-box order-box">
+            <div class="order-header">
+                <img id="order-logo" src="" class="order-app-logo">
+                <h3>تکمیل اطلاعات سفارش</h3>
+            </div>
+            <div class="order-form">
+                <p>برای ارسال سفارش به <span id="order-app-name"></span> لطفا مشخصات خود را وارد کنید:</p>
+                <input type="text" id="user-name" placeholder="نام و نام خانوادگی (الزامی)">
+                <input type="tel" id="user-phone" placeholder="شماره تماس (الزامی)">
+                
+                <div class="order-preview">
+                    <h4>پیش‌نمایش لیست:</h4>
+                    <div id="order-summary-text"></div>
+                </div>
+
+                <button class="confirm-order-btn" onclick="finalizeOrder()">
+                    <i class="fas fa-clipboard-check"></i> کپی در کلیپ‌بورد و ارسال
+                </button>
+                <button class="cancel-order-btn" onclick="closeOrderModal()">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- فول اسکرین زوم -->
     <div id="fs-viewer" onclick="closeFullscreen()">
-        <button class="fs-close" onclick="closeFullscreen()">بستن</button>
+        <button class="fs-close">بستن زوم</button>
         <img id="fs-img" src="">
-        <p class="fs-guide">برای زوم دو بار کلیک کنید</p>
     </div>
 
     <!-- فوتر -->
     <footer>
-        <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" class="f-logo">
-        <div class="f-socials-row">
-            <a href="https://t.me/NanoMetricLab"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767113676/telgrampng.parspng.com__rzuqpw.png"></a>
-            <a href="https://rubika.ir/nanometriclab"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112404/Rubika_Icon_zlc48h.png"></a>
-            <a href="https://eitaa.com/nanometriclab"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767111952/Eitaa-vector-logo_1221133400_we5m5l.png"></a>
-            <a href="https://ble.ir/nanometriclab"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112210/bale-color_a9gfhw.png"></a>
-            <a href="https://instagram.com/nanometriclab"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767116766/050e6fb1-f306-4571-a198-61f15806718e_1_ln8bgv.png"></a>
+        <div class="trust-logos">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190935/E-Namad_sn92mb.png" alt="Enamad">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190937/Samandehi_fnoofo.png" alt="Samandehi">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190939/ZarinPall_Secure_Pay_xmj7mj.png" alt="ZarinPal">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190938/Anjoman_Senfi_Kasb_O_Karhay_Interneti_i1hvza.png" alt="Anjoman">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767191438/SSL_Certification_ie02hy.png" alt="SSL">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190937/Senfi_Rayane_ey_yjugxv.png" alt="Nezam Senfi">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190935/Payping_zklc0t.jpg" alt="PayPing">
+            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190935/Kasb_O_Karhay_Majazi_ux5dyo.png" alt="Ettehadie">
         </div>
+        <p style="margin-top:20px; color:#666; font-size:0.8rem">تمامی حقوق برای استودیو نانومتریک محفوظ است.</p>
     </footer>
 
-    <!-- انیمیشن افزودن به سبد -->
-    <div id="fly-item" class="fly-animation"></div>
+    <!-- انیمیشن پرواز -->
+    <div id="fly-el"></div>
 
-    <script src="script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- فایل دیتای پشتیبان -->
+    <script src="data.js"></script> 
+    <script src="script.js"></script>
 </body>
 </html>
