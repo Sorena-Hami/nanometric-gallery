@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ژورنال نانومتریک | NanoMetric Gallery</title>
-    
+
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
 <body data-theme="dark">
 
+    <!-- صدای ورق زدن -->
     <audio id="flip-sound" src="https://www.soundjay.com/books/sounds/page-flip-01a.mp3"></audio>
 
-    <!-- نوار FOMO (تخفیف ویژه) -->
+    <!-- نوار FOMO -->
     <div id="fomo-bar">
         <span class="fomo-text">🔥 تخفیف ویژه ژورنال تا پایان:</span>
         <span id="countdown">00:00:00</span>
@@ -29,10 +30,8 @@
     <!-- هدر -->
     <header class="main-header">
         <div class="header-top">
-            <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" class="logo-big">
-            
+            <img src="logo.png" class="logo-big">
             <div class="header-tools">
-                <!-- تم سوئیچ قدیمی (رادیویی) -->
                 <div class="theme-wrapper">
                     <input type="checkbox" id="theme-chk" onchange="toggleTheme()">
                     <label for="theme-chk" class="theme-label">
@@ -87,7 +86,7 @@
         </div>
     </main>
 
-    <!-- دکمه شناور تماس (بازشو) -->
+    <!-- دکمه شناور تماس -->
     <div class="float-contact-wrapper">
         <div class="contact-options" id="contact-opts">
             <a href="sms:+989304653535" class="c-opt sms"><i class="fas fa-comment-dots"></i> پیامک</a>
@@ -125,12 +124,10 @@
     <div class="modal" id="modal">
         <div class="modal-box">
             <button class="modal-back" onclick="closeModal()">بازگشت <i class="fas fa-arrow-left"></i></button>
-            
             <div class="modal-img-area">
                 <img id="m-img" src="">
                 <button class="zoom-icon" onclick="openFullscreen()"><i class="fas fa-expand"></i></button>
             </div>
-
             <div class="modal-content">
                 <div class="stat-row">
                     <span><i class="fas fa-eye"></i> <b id="m-views"></b></span>
@@ -139,21 +136,16 @@
                     </span>
                     <span class="crown-box" id="m-crown"></span>
                 </div>
-
                 <div class="price-row" id="m-price"></div>
                 <h2 id="m-title"></h2>
-                
                 <div class="copy-box" onclick="copyCode()">
                     <span>برای کپی کد کلیک کنید:</span> <b id="m-code"></b> <i class="far fa-copy"></i>
                 </div>
-
                 <p id="m-desc"></p>
-
                 <div class="modal-btns">
                     <button id="btn-add-list" class="action-btn add" onclick="toggleListState()">
                         <i class="fas fa-plus-circle"></i> افزودن به لیست
                     </button>
-                    
                     <p class="guide-text">مشاوره و ثبت سفارش سریع در:</p>
                     <div class="social-grid" id="social-grid"></div>
                 </div>
@@ -183,7 +175,7 @@
     <!-- انیمیشن افزودن به سبد -->
     <div id="fly-item" class="fly-animation"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 </body>
 </html>
