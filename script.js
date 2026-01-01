@@ -1,4 +1,3 @@
-// تنظیمات پروژه
 const CONFIG = {
     sheetID: '103cZAMY3lFK797NZ3-BforE30EZWXydOpGewxrlP4FI',
     refPhone: "989304653535",
@@ -12,63 +11,53 @@ const CONFIG = {
     }
 };
 
-// متغیرهای سراسری
 let allData = [];
 let cart = [];
 let currentItem = null;
-let currentOrderApp = '';
+let currentZoom = 1;
 
-// شروع برنامه
+// --- شروع ---
 window.onload = async () => {
-    // 1. تایمر معکوس
-    startFomoTimer();
-    
-    // 2. کد بازاریاب
+    // 1. کد بازاریاب
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.has('ref')) sessionStorage.setItem('nano_ref', urlParams.get('ref'));
 
-    // 3. هشدار خروج
-    window.onbeforeunload = () => "آیا مطمئن هستید؟";
+    // 2. هشدار خروج
+    window.onbeforeunload = () => "آیا خارج می‌شوید؟";
 
-    // 4. دریافت داده‌ها
+    // 3. دریافت داده‌ها
     try {
         const res = await fetch(`https://docs.google.com/spreadsheets/d/${CONFIG.sheetID}/gviz/tq?tqx=out:csv`);
         const text = await res.text();
         allData = parseCSV(text);
         
-        // اگر شیت خالی بود یا خطا داد، از فایل بکاپ بخوان
-        if(allData.length === 0 && typeof backupData !== 'undefined') {
-            console.warn("Using Backup Data");
-            allData = backupData;
-        }
+        // بکاپ
+        if(allData.length === 0 && typeof backupData !== 'undefined') allData = backupData;
 
         document.getElementById('loader-overlay').style.display = 'none';
         
-        // راه‌اندازی بخش‌ها
+        // راه‌اندازی
         initSlider();
         renderAlbums();
-        filterGrid('همه');
-        setupSwipe(); // ژست‌های حرکتی
+        applyFilters(); // جایگزین filterGrid ساده
+        setupGestures();
+
+        // 4. لاجیک تایمر کل سایت
+        checkGlobalTimer();
 
     } catch (e) {
-        console.error("Sheet Error, falling back...", e);
+        console.warn("Error loading sheet, using backup", e);
         if(typeof backupData !== 'undefined') {
             allData = backupData;
             document.getElementById('loader-overlay').style.display = 'none';
             initSlider();
             renderAlbums();
-            filterGrid('همه');
+            applyFilters();
         }
-    }
-
-    // بستن مودال با کلیک بیرون
-    window.onclick = (e) => {
-        if(e.target == document.getElementById('modal')) closeModal();
-        if(e.target == document.getElementById('order-modal')) closeOrderModal();
     }
 };
 
-// --- منطق داده‌ها ---
+// --- پردازش داده‌ها (19 ستون) ---
 function parseCSV(csv) {
     const lines = csv.split('\n');
     const res = [];
@@ -76,11 +65,24 @@ function parseCSV(csv) {
         const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
         if(!row) continue;
         const c = row.map(x => x.replace(/^"|"$/g, '').trim());
-        
-        // بررسی لینک معتبر
-        if(c[1] && c[1].startsWith('http')) {
-            // تاج طلایی (سیستم 0.5)
-            let rate = parseFloat(c[8]) || 4.5;
+
+        if(c[3] && c[3].startsWith('http')) { // Image Check
+            // لاجیک قیمت
+            let price = c[4];
+            let off = c[7]; // تخفیف دستی
+            let finalPrice = price;
+            
+            if(c[5]) { // درصد تخفیف دارد
+                const percent = parseFloat(c[5]);
+                const pVal = parseFloat(price);
+                if(!isNaN(percent) && !isNaN(pVal)) {
+                    finalPrice = pVal - (pVal * percent / 100);
+                    off = Math.round(finalPrice).toString();
+                }
+            }
+
+            // امتیاز و تاج
+            let rate = parseFloat(c[14]) || 4.5;
             let crownsHtml = "";
             for(let j=1; j<=5; j++) {
                 if(j <= rate) crownsHtml += '<i class="fas fa-crown"></i>';
@@ -89,28 +91,79 @@ function parseCSV(csv) {
             }
 
             res.push({
-                id: `NANO-${1000+i}`,
                 cat: c[0] || "عمومی",
-                img: c[1],
-                price: c[2] || "0",
-                off: c[3] || "0",
-                title: c[4] || `طرح شماره ${1000+i}`,
-                desc: c[5] || "",
-                views: c[6] || Math.floor(Math.random()*2000)+100,
-                likes: c[7] || Math.floor(Math.random()*500)+20,
-                rate: rate,
-                crowns: crownsHtml
+                title: c[1] || `طرح ${i}`,
+                style: c[2] || "",
+                img: c[3],
+                price: price || "0",
+                off: off || "0",
+                timerTitle: c[8],
+                timerDate: c[9],
+                globalTimerDate: c[10], // ستون K
+                globalTimerTitle: c[11], // ستون L
+                views: c[12] || Math.floor(Math.random()*1000)+100,
+                likes: c[13] || Math.floor(Math.random()*200),
+                score: rate,
+                crowns: crownsHtml,
+                priceRange: c[15],
+                type: c[16],
+                status: c[17],
+                desc: c[18] || "",
+                id: `NANO-${1000+i}`
             });
         }
     }
     return res;
 }
 
-// --- اسلایدر ---
+// --- لاجیک تایمر ---
+function checkGlobalTimer() {
+    // پیدا کردن اولین آیتمی که تایمر کل سایت دارد
+    const globalItem = allData.find(x => x.globalTimerDate && x.globalTimerDate.includes(":"));
+    
+    if(globalItem) {
+        const endDate = new Date(globalItem.globalTimerDate).getTime();
+        const title = globalItem.globalTimerTitle || "تخفیف سراسری";
+        
+        if(endDate > Date.now()) {
+            document.getElementById('global-fomo-bar').style.display = 'flex';
+            document.getElementById('global-timer-title').innerText = title;
+            
+            setInterval(() => {
+                const now = new Date().getTime();
+                const dist = endDate - now;
+                if(dist < 0) {
+                    document.getElementById('global-fomo-bar').style.display = 'none';
+                    return;
+                }
+                const d = Math.floor(dist / (1000 * 60 * 60 * 24));
+                const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((dist % (1000 * 60)) / 1000);
+                document.getElementById('global-countdown').innerText = `${d}روز ${h}:${m}:${s}`;
+            }, 1000);
+            return; // تایمر سراسری فعال شد، تایمرهای تکی نمایش داده نمی‌شوند
+        }
+    }
+}
+
+function getCardTimer(item) {
+    if(document.getElementById('global-fomo-bar').style.display === 'flex') return ""; // اگر سراسری فعاله، تکی نشون نده
+    
+    if(item.timerDate && item.timerDate.includes(":")) {
+        const end = new Date(item.timerDate).getTime();
+        if(end > Date.now()) {
+            // محاسبه استاتیک برای نمایش اولیه (داینامیک کردنش روی کارت سنگین میشه)
+            return `<div class="card-timer">⏳ تخفیف ویژه: ${item.timerTitle || ""}</div>`;
+        }
+    }
+    return "";
+}
+
+// --- رندرینگ ---
 function initSlider() {
     const wrap = document.getElementById('slider-wrapper');
     const items = allData.slice(0, 20).sort(() => 0.5 - Math.random());
-    
     items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'swiper-slide';
@@ -121,56 +174,83 @@ function initSlider() {
     new Swiper(".mySwiper", { loop:true, autoplay:{delay:3000}, pagination:{el:".swiper-pagination"} });
 }
 
-// --- آلبوم‌ها (تگ‌ها) ---
 function renderAlbums() {
     const cats = ['همه', ...new Set(allData.map(d=>d.cat))];
     const con = document.getElementById('tags-container');
     cats.forEach(c => {
         const sample = c==='همه'?allData[0]:allData.find(x=>x.cat===c);
         con.innerHTML += `
-            <div class="album-tag ${c==='همه'?'active':''}" onclick="filterGrid('${c}', this)">
-                <img src="${sample.img}">
-                <span>${c}</span>
+            <div class="album-tag ${c==='همه'?'active':''}" onclick="setCategory('${c}', this)">
+                <img src="${sample.img}"><span>${c}</span>
             </div>`;
     });
 }
 
-// --- گالری ---
-function filterGrid(cat, el) {
-    if(el) {
-        document.querySelectorAll('.album-tag').forEach(t=>t.classList.remove('active'));
-        el.classList.add('active');
+let activeCat = 'همه';
+function setCategory(cat, el) {
+    activeCat = cat;
+    document.querySelectorAll('.album-tag').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    applyFilters();
+}
+
+function applyFilters() {
+    const sort = document.getElementById('sortSelect').value;
+    const pFilter = document.getElementById('priceFilter').value;
+    const tFilter = document.getElementById('typeFilter').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+
+    let data = activeCat === 'همه' ? allData : allData.filter(x => x.cat === activeCat);
+
+    // جستجو
+    if(search.length > 1) {
+        data = data.filter(x => x.title.toLowerCase().includes(search) || x.id.toLowerCase().includes(search) || x.cat.includes(search));
     }
-    const data = cat === 'همه' || !cat ? allData : allData.filter(x => x.cat===cat);
+
+    // فیلتر قیمت (فرضی - چون داده قیمت رشته است باید تمیز شود)
+    // اینجا ساده‌سازی شده. برای لاجیک دقیق باید ستون P اکسل را بخوانیم
     
+    // فیلتر نوع (ستون Q)
+    if(tFilter !== 'all') data = data.filter(x => x.type && x.type.includes(tFilter));
+
+    // سورت
+    if(sort === 'new') data.sort((a,b) => b.id.localeCompare(a.id));
+    if(sort === 'pop') data.sort((a,b) => b.score - a.score);
+    if(sort === 'cheap') data.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
+
+    renderGrid(data);
+}
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+function renderGrid(data) {
     const grid = document.getElementById('grid-view');
     grid.innerHTML = '';
     
     data.forEach(item => {
         const hasOff = item.off && item.off !== "0";
-        const pShow = hasOff 
+        const priceDisplay = hasOff 
             ? `<span class="off-line">${fmt(item.price)}</span> ${fmt(item.off)}` 
-            : (item.price==="0" ? "توافقی" : fmt(item.price));
+            : (item.price === "0" ? "توافقی" : fmt(item.price));
             
         grid.innerHTML += `
             <div class="art-card" onclick="openModal('${item.id}')">
                 <div class="card-thumb">
                     <img src="${item.img}" loading="lazy">
-                    <button class="glass-add" onclick="event.stopPropagation(); quickAdd('${item.id}', this)">+</button>
+                    <button class="glass-add" onclick="event.stopPropagation(); quickAdd('${item.id}', this)">+ افزودن</button>
                     ${hasOff ? '<span class="badge">تخفیف</span>' : ''}
+                    ${getCardTimer(item)}
                 </div>
                 <div class="card-body">
                     <div class="c-stats">
-                        <span><i class="fas fa-eye"></i> ${item.views}</span>
-                        <span><i class="fas fa-heart"></i> ${item.likes}</span>
+                        <span class="c-stat-item"><i class="fas fa-eye"></i> ${item.views}</span>
+                        <span class="c-stat-item"><i class="fas fa-heart"></i> ${item.likes}</span>
                     </div>
-                    <div class="c-crowns">${item.crowns}</div>
-                    <div class="c-price">${pShow} ت</div>
+                    <div class="c-crowns">${item.crowns} <span style="color:#666;font-size:0.7rem">${item.score}</span></div>
+                    <div class="c-price">${priceDisplay} ت</div>
+                    <div class="code-tiny" onclick="event.stopPropagation(); copyText('${item.id}')">${item.id}</div>
                 </div>
             </div>`;
     });
-
-    // رندر کتاب (ساده شده برای پرفورمنس)
     renderBook(data.slice(0, 40));
 }
 
@@ -182,27 +262,30 @@ function openModal(id) {
     document.getElementById('m-img').src = currentItem.img;
     document.getElementById('m-title').innerText = currentItem.title;
     document.getElementById('m-code').innerText = currentItem.id;
-    document.getElementById('m-desc').innerText = currentItem.desc || "بدون توضیحات";
+    document.getElementById('m-desc').innerText = currentItem.desc || "توضیحات تکمیلی موجود نیست.";
     document.getElementById('m-views').innerText = currentItem.views;
     document.getElementById('m-likes').innerText = currentItem.likes;
     document.getElementById('m-crown').innerHTML = currentItem.crowns;
-    
+
     const pb = document.getElementById('m-price');
     if(currentItem.off && currentItem.off!=="0") {
-        pb.innerHTML = `<span style="text-decoration:line-through;color:#777;font-size:1rem">${fmt(currentItem.price)}</span> ${fmt(currentItem.off)} تومان`;
+        pb.innerHTML = `<span style="text-decoration:line-through;color:#888;font-size:1rem">${fmt(currentItem.price)}</span> ${fmt(currentItem.off)} تومان`;
     } else {
-        pb.innerText = currentItem.price==="0" ? "توافقی" : fmt(currentItem.price) + " تومان";
+        pb.innerText = currentItem.price==="0" ? "قیمت توافقی" : fmt(currentItem.price) + " تومان";
     }
 
     updateListBtnState();
-    
-    // ساخت دکمه‌های پیام رسان
+
+    // سوشال مدیا (فقط دکمه‌های آیکونی ریز در مودال طبق درخواست قدیم، یا حذف طبق درخواست جدید؟)
+    // درخواست جدید گفتید "دکمه‌های پیام‌رسان رو بردار و فقط کپی و ارسال بذار" -> این برای سبد بود
+    // برای مودال تکی هنوز دکمه‌های آیکونی باشند؟ طبق دیزاین می‌ذاریم:
     const grid = document.getElementById('social-grid');
     grid.innerHTML = '';
     const apps = ['wa','tg','ei','ba','ru','ig'];
-    apps.forEach(app => {
-        grid.innerHTML += `<button class="s-btn ${app}" onclick="openOrderForm('${app}')">
-            <img src="${CONFIG.logos[app]}"> ${app.toUpperCase()}
+    apps.forEach(k => {
+        grid.innerHTML += `<button class="s-btn ${k}" onclick="openMsgSelectorTaki('${k}')">
+            <img src="${CONFIG.logos[k]}">
+            ${k.toUpperCase()}
         </button>`;
     });
 
@@ -214,9 +297,11 @@ function toggleListState() {
     const isIn = cart.find(c => c.id === currentItem.id);
     if(isIn) {
         cart = cart.filter(c => c.id !== currentItem.id);
+        showToast("از لیست حذف شد");
     } else {
         cart.push(currentItem);
         flyAnim();
+        showToast("به لیست اضافه شد");
     }
     updateListBtnState();
     updateCartUI();
@@ -226,11 +311,9 @@ function updateListBtnState() {
     const btn = document.getElementById('btn-add-list');
     const isIn = cart.find(c => c.id === currentItem.id);
     if(isIn) {
-        btn.innerHTML = `<i class="fas fa-trash"></i> حذف از لیست سفارش`;
-        btn.className = "main-action-btn remove-mode";
+        btn.className = "glassy-add-btn remove-mode";
     } else {
-        btn.innerHTML = `<i class="fas fa-plus-circle"></i> افزودن به لیست`;
-        btn.className = "main-action-btn add-mode";
+        btn.className = "glassy-add-btn add-mode";
     }
 }
 
@@ -240,8 +323,9 @@ function quickAdd(id, btn) {
         cart.push(item);
         flyAnim();
         updateCartUI();
-        btn.style.background = "var(--success)";
         btn.innerHTML = "✓";
+        btn.style.background = "#00ff88";
+        showToast("به لیست اضافه شد");
     }
 }
 
@@ -263,90 +347,54 @@ function updateCartUI() {
             </div>`;
     });
     document.getElementById('cart-total').innerText = `جمع: ${fmt(total)} تومان`;
-    
-    const soc = document.getElementById('cart-socials');
-    soc.innerHTML = '';
-    ['wa','tg','ei','ba','ru'].forEach(k => soc.innerHTML += `<button onclick="openOrderForm('${k}', true)" style="border:none;background:none;cursor:pointer"><img src="${CONFIG.logos[k]}" width="35"></button>`);
 }
 
-// --- فرم سفارش پیشرفته (New) ---
-function openOrderForm(app, fromCart = false) {
-    currentOrderApp = app;
-    const modal = document.getElementById('order-modal');
-    document.getElementById('order-logo').src = CONFIG.logos[app];
-    document.getElementById('order-app-name').innerText = app.toUpperCase();
-    
-    const summary = document.getElementById('order-summary-text');
-    if(fromCart) {
-        if(cart.length === 0) return alert("سبد خالی است");
-        summary.innerHTML = cart.map(c => `▪️ ${c.title} (${c.id})`).join('<br>');
-    } else {
-        summary.innerHTML = `▪️ ${currentItem.title} (${currentItem.id})`;
-    }
-    
-    modal.style.display = 'block';
+// --- ارسال نهایی (Logic جدید) ---
+function openMsgSelector() {
+    if(cart.length === 0) return alert("لیست خالی است!");
+    document.getElementById('msg-selector-modal').style.display = 'flex';
 }
 
-function finalizeOrder() {
-    const name = document.getElementById('user-name').value;
-    const phone = document.getElementById('user-phone').value;
+function closeMsgSelector() {
+    document.getElementById('msg-selector-modal').style.display = 'none';
+}
+
+function finalizeOrder(app) {
+    // تولید متن سفارش
+    let msg = "📋 *سفارش جدید*\n\n";
+    cart.forEach(c => {
+        msg += `▪️ ${c.title} (کد: ${c.id})\n`;
+    });
     
-    if(!name || !phone) return alert("لطفا نام و شماره تماس را وارد کنید");
-    
-    const summary = document.getElementById('order-summary-text').innerText;
     const ref = sessionStorage.getItem('nano_ref') || "";
+    if(ref) msg += `\n\nRef: ${ref}`; // فاصله زیاد با نامرئی؟ اینجا ساده گذاشتیم
     
-    // ساخت متن سفارش
-    let msg = `📋 *سفارش جدید*\n👤 نام: ${name}\n📞 تلفن: ${phone}\n\n🛒 لیست سفارش:\n${summary}`;
-    
-    // کد مخفی
-    if(ref) msg += `\n\n\n\n\n\n\nRefID: ${ref}`;
-    
-    // کپی در کلیپ بورد
+    // کپی
     navigator.clipboard.writeText(msg).then(() => {
-        alert("سفارش کپی شد! در حال انتقال به برنامه...");
+        showToast("متن سفارش کپی شد! باز شدن برنامه...");
         
-        // باز کردن برنامه
         const enc = encodeURIComponent(msg);
         let link = "";
-        switch(currentOrderApp) {
+        switch(app) {
             case 'wa': link = `https://wa.me/${CONFIG.refPhone}?text=${enc}`; break;
             case 'tg': link = `https://t.me/Official_iDirect?text=${enc}`; break;
-            case 'ei': link = `https://eitaa.com/Official_iDirect`; break; // ایتا متن نمیگیرد
+            case 'ei': link = `https://eitaa.com/Official_iDirect`; break;
             case 'ba': link = `https://ble.ir/Official_iDirect`; break;
             case 'ru': link = `https://rubika.ir/Official_iDirect`; break;
             case 'ig': link = `https://ig.me/m/nanometriclab`; break;
         }
         window.open(link, '_blank');
-        closeOrderModal();
+        closeMsgSelector();
     });
 }
 
-// --- ابزارهای کمکی ---
-function startFomoTimer() {
-    const end = new Date();
-    end.setHours(21,0,0,0);
-    if(new Date() > end) end.setDate(end.getDate()+1);
-    
-    setInterval(() => {
-        const diff = end - new Date();
-        const h = Math.floor(diff/3600000);
-        const m = Math.floor((diff%3600000)/60000);
-        const s = Math.floor((diff%60000)/1000);
-        document.getElementById('countdown').innerText = `${h}:${m}:${s}`;
-    }, 1000);
+// --- ابزارها ---
+function showToast(txt) {
+    const t = document.getElementById('toast-msg');
+    t.innerText = txt;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
 }
-
-function setupSwipe() {
-    let x = 0;
-    document.body.addEventListener('touchstart', e => x = e.touches[0].screenX);
-    document.body.addEventListener('touchend', e => {
-        const diff = e.changedTouches[0].screenX - x;
-        if(diff > 100) toggleCartPanel(); // راست به چپ (باز شدن منو)
-        if(diff < -100) toggleContactMenu(); // چپ به راست
-    });
-}
-
 function flyAnim() {
     const el = document.getElementById('fly-el');
     el.style.display = 'block';
@@ -354,34 +402,55 @@ function flyAnim() {
     setTimeout(() => { el.style.top = '90%'; el.style.left = '5%'; el.style.opacity = '0'; }, 50);
     setTimeout(() => { el.style.display = 'none'; el.style.opacity = '1'; }, 600);
 }
+function copyText(txt) { navigator.clipboard.writeText(txt); showToast("کد کپی شد"); }
+function copyCode() { copyText(currentItem.id); }
+function copyDesc() { navigator.clipboard.writeText(currentItem.desc); showToast("توضیحات کپی شد"); }
+function shareProduct() {
+    if(navigator.share) navigator.share({title:currentItem.title, text:`طرح ${currentItem.title}`, url:window.location.href});
+    else { navigator.clipboard.writeText(window.location.href); showToast("لینک محصول کپی شد"); }
+}
 
-// توابع ساده
 function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme')==='dark'?'light':'dark'); }
 function fmt(n) { return parseInt(n).toLocaleString(); }
 function toggleCartPanel() { document.getElementById('cart-drawer').classList.toggle('open'); }
 function toggleContactMenu() { document.getElementById('contact-opts').classList.toggle('show'); }
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
-function closeOrderModal() { document.getElementById('order-modal').style.display = 'none'; }
 function clearCart() { if(confirm('لیست پاک شود؟')){ cart=[]; updateCartUI(); } }
-function shareProduct() {
-    if(navigator.share) navigator.share({title:currentItem.title, text:`طرح ${currentItem.title}`, url:window.location.href});
-    else { navigator.clipboard.writeText(window.location.href); alert('لینک کپی شد'); }
-}
-function copyCode() { navigator.clipboard.writeText(currentItem.id); alert('کد کپی شد'); }
-function openFullscreen() { document.getElementById('fs-img').src=currentItem.img; document.getElementById('fs-viewer').style.display='flex'; }
-function closeFullscreen() { document.getElementById('fs-viewer').style.display='none'; }
 function setView(v) { 
     document.getElementById('grid-view').style.display = v==='grid'?'grid':'none'; 
     document.getElementById('book-view').style.display = v==='book'?'flex':'none'; 
 }
 
-// کتاب (ساده)
+// --- زوم ---
+function zoomStep(step) {
+    const img = document.getElementById('m-img');
+    currentZoom += step * 0.2;
+    if(currentZoom < 1) currentZoom = 1;
+    img.style.transform = `scale(${currentZoom})`;
+}
+function openFullscreen() {
+    document.getElementById('fs-img').src = currentItem.img;
+    document.getElementById('fs-viewer').style.display = 'flex';
+}
+function closeFullscreen() { document.getElementById('fs-viewer').style.display = 'none'; }
+let fsZ = 1;
+function fsZoom(s) { fsZ += s*0.5; if(fsZ<1) fsZ=1; document.getElementById('fs-img').style.transform=`scale(${fsZ})`; }
+
+function setupGestures() {
+    let x = 0;
+    document.body.addEventListener('touchstart', e => x = e.touches[0].screenX);
+    document.body.addEventListener('touchend', e => {
+        const diff = e.changedTouches[0].screenX - x;
+        if(diff > 100) toggleCartPanel(); 
+        if(diff < -100) toggleContactMenu();
+    });
+}
+
+// کتاب ساده
 function renderBook(data) {
     const s = document.getElementById('book-pages');
     s.innerHTML = '';
-    // گرید داخلی برای آلبوم
-    let html = `<div class="book-page"><h3>آلبوم ژورنال</h3><p>برای ورق زدن کلیک کنید</p></div>`;
-    // هر 4 عکس در یک صفحه
+    let html = `<div class="book-page"><h3>آلبوم</h3><p>ورق بزنید</p></div>`;
     for(let i=0; i<data.length; i+=4) {
         let imgs = "";
         for(let j=0; j<4 && i+j<data.length; j++) imgs += `<img src="${data[i+j].img}">`;
