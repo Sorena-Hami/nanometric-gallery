@@ -1,250 +1,183 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NanoMetric | ژورنال هنر دیجیتال</title>
-    <link rel="icon" href="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png">
-    
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="style.css">
-</head>
-<body data-theme="dark">
+:root {
+    --bg: #101010; --card: #1c1c1e; --text: #f2f2f2; --muted: #a0a0a0;
+    --primary: #00f2ff; /* فیروزه‌ای */
+    --accent: #ff0055; /* قرمز برند */
+    --border: #333;
+    --cart-bg: #00bcd4;
+    --glass: rgba(255, 255, 255, 0.1);
+}
+[data-theme="light"] {
+    --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --muted: #666;
+    --primary: #007aff; --border: #d2d2d7; --glass: rgba(0,0,0,0.05);
+}
 
-    <audio id="flip-sound" src="https://www.soundjay.com/books/sounds/page-flip-01a.mp3"></audio>
+body { margin:0; font-family:'Vazirmatn', sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; -webkit-tap-highlight-color:transparent; user-select:none; }
+* { box-sizing:border-box; outline:none; }
+img { pointer-events:none; -webkit-user-drag: none; }
 
-    <!-- نوار FOMO (تایمر کل سایت) -->
-    <div id="global-fomo-bar" style="display:none;">
-        <span class="blink" id="global-timer-title">🔥 تخفیف ویژه:</span>
-        <span id="global-countdown">00:00:00</span>
-    </div>
+/* Global FOMO Bar */
+#global-fomo-bar {
+    background: linear-gradient(90deg, #ff9500, #ff3b30); color: white;
+    text-align: center; padding: 8px; font-weight: bold; position: sticky; top: 0; z-index: 100;
+    display: flex; justify-content: center; gap: 10px; font-size: 0.9rem;
+}
+.blink { animation: blink 1.5s infinite; }
+@keyframes blink { 50% { opacity: 0.5; } }
 
-    <!-- لودینگ -->
-    <div id="loader-overlay">
-        <div class="spinner"></div>
-        <p>در حال بارگذاری ژورنال...</p>
-    </div>
+/* Scroll Nav */
+.scroll-nav { position: fixed; right: 20px; bottom: 100px; display: flex; flex-direction: column; gap: 5px; z-index: 90; }
+.scroll-nav button { width: 35px; height: 35px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5); color: white; cursor: pointer; backdrop-filter: blur(5px); }
 
-    <!-- دکمه‌های اسکرول سریع -->
-    <div class="scroll-nav">
-        <button onclick="window.scrollTo(0,0)">▲</button>
-        <button onclick="window.scrollTo(0,document.body.scrollHeight)">▼</button>
-    </div>
+/* Header */
+.main-header { padding: 15px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.logo-big { height: 80px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,242,255,0.3)); }
+.brand-text { font-family: sans-serif; font-weight: bold; font-size: 1.1rem; color: var(--text); letter-spacing: 2px; margin-top: 5px; display: block; opacity: 0.8; }
 
-    <!-- هدر -->
-    <header class="main-header" id="top">
-        <div class="header-top">
-            <div class="brand-area">
-                <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767110113/558dc96a-eef1-4f98-bcec-a83999e8b9d0_1_esp524.png" class="logo-big">
-                <span class="brand-text">NanoMetric</span>
-            </div>
-            
-            <div class="header-controls">
-                <!-- سوئیچ تم جدید -->
-                <label class="theme-switch">
-                    <input type="checkbox" id="theme-toggle" onchange="toggleTheme()">
-                    <span class="slider round">
-                        <i class="fas fa-sun sun-icon"></i>
-                        <i class="fas fa-moon moon-icon"></i>
-                    </span>
-                </label>
-            </div>
-        </div>
+/* Theme Switch iOS */
+.theme-switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--card); border: 1px solid var(--border); transition: .4s; border-radius: 34px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; }
+.slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 3px; bottom: 2px; background-color: var(--primary); transition: .4s; border-radius: 50%; z-index: 2; }
+input:checked + .slider:before { transform: translateX(30px); }
+.sun-icon { color: orange; font-size: 14px; } 
+.moon-icon { color: #333; font-size: 14px; } /* ماه تیره */
 
-        <!-- اسلایدر -->
-        <div class="swiper mySwiper">
-            <div class="swiper-wrapper" id="slider-wrapper"></div>
-            <div class="swiper-pagination"></div>
-        </div>
-    </header>
+/* Slider */
+.swiper { width: 100%; height: 250px; border-radius: 20px; margin-top: 15px; }
+.swiper-slide { position: relative; cursor: pointer; }
+.swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
+.slide-title { position: absolute; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); color: white; font-weight: bold; font-size: 1.2rem; text-align: right; }
 
-    <!-- ابزارها (چسبنده) -->
-    <div class="sticky-tools">
-        <div class="search-row">
-            <input type="text" id="searchInput" placeholder="جستجوی نام، کد، دسته...">
-            <div class="view-icons">
-                <button class="v-btn active" onclick="setView('grid')"><i class="fas fa-th-large"></i></button>
-                <button class="v-btn" onclick="setView('book')"><i class="fas fa-book-open"></i></button>
-            </div>
-        </div>
-        
-        <!-- فیلترها -->
-        <div class="filters-row">
-            <select id="sortSelect" onchange="applyFilters()">
-                <option value="new">جدیدترین</option>
-                <option value="pop">محبوب‌ترین</option>
-                <option value="cheap">ارزان‌ترین</option>
-            </select>
-            <select id="priceFilter" onchange="applyFilters()">
-                <option value="all">همه قیمت‌ها</option>
-                <option value="low">زیر ۵۰۰ ت</option>
-                <option value="mid">۵۰۰ تا ۱ م</option>
-                <option value="high">بالای ۱ م</option>
-                <option value="agreed">توافقی</option>
-            </select>
-            <select id="typeFilter" onchange="applyFilters()">
-                <option value="all">همه انواع</option>
-                <option value="restore">ترمیم</option>
-                <option value="design">طراحی</option>
-                <option value="video">ویدیو</option>
-            </select>
-        </div>
+/* Tools */
+.sticky-tools { position: sticky; top: 35px; z-index: 90; background: var(--bg); padding: 15px 0; border-bottom: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.search-row { display: flex; gap: 10px; padding: 0 15px; margin-bottom: 10px; }
+#searchInput { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+.filters-row { display: flex; gap: 5px; padding: 0 15px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
+.filters-row select { padding: 8px; border-radius: 8px; background: var(--card); color: var(--text); border: 1px solid var(--border); font-size: 0.9rem; }
 
-        <!-- آلبوم‌های بندانگشتی (تگ‌ها) -->
-        <div class="albums-scroll" id="tags-container"></div>
-    </div>
+.albums-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 5px 15px; scrollbar-width: none; }
+.album-tag { min-width: 90px; text-align: center; cursor: pointer; opacity: 0.6; transition: 0.3s; position: relative; }
+.album-tag.active { opacity: 1; transform: scale(1.05); }
+.album-tag img { width: 70px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid var(--border); margin-bottom: 5px; transform: perspective(500px) rotateX(20deg); transform-origin: bottom; transition: 0.3s; }
+.album-tag.active img { border-color: var(--primary); transform: perspective(500px) rotateX(0deg); }
+.album-tag span { font-size: 0.8rem; display: block; font-weight: bold; }
 
-    <main id="main-area">
-        <div id="grid-view" class="gallery-grid"></div>
+/* Grid Cards */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; padding: 15px; max-width: 1200px; margin: 0 auto; }
+.art-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); position: relative; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.card-thumb { position: relative; padding-top: 100%; }
+.card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-        <div id="book-view">
-            <div class="book-bg">
-                <div class="book-stage">
-                    <div id="book-pages" class="book-core"></div>
-                </div>
-                <div class="book-nav">
-                    <button onclick="prevPage()">صفحه قبل</button>
-                    <span id="page-num">جلد</span>
-                    <button onclick="nextPage()">صفحه بعد</button>
-                </div>
-            </div>
-        </div>
-    </main>
+/* دکمه افزودن شیشه‌ای */
+.glass-add { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; font-weight: bold; z-index: 2; }
+.glass-add:hover { background: var(--primary); color: black; }
 
-    <!-- دکمه شناور تماس -->
-    <div class="float-wrapper contact-wrapper">
-        <div class="pop-options" id="contact-opts">
-            <a href="sms:+989304653535" class="pop-item sms"><i class="fas fa-comment-alt"></i> ارسال پیامک</a>
-            <a href="tel:+989304653535" class="pop-item call"><i class="fas fa-phone-alt"></i> تماس تلفنی</a>
-        </div>
-        <button class="float-btn contact-btn" onclick="toggleContactMenu()">
-            <i class="fas fa-headset"></i>
-        </button>
-    </div>
+/* تایمر روی کارت */
+.card-timer { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); color: #ff9500; font-size: 0.8rem; text-align: center; padding: 3px; font-family: monospace; }
 
-    <!-- دکمه شناور سبد -->
-    <div class="float-btn cart-btn" onclick="toggleCartPanel()">
-        <i class="fas fa-shopping-bag"></i>
-        <span id="cart-badge">0</span>
-    </div>
+.card-body { padding: 12px; }
+.c-stats { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--muted); font-size: 0.8rem; }
+.c-stat-item i { margin-left: 3px; }
+.c-crowns { color: gold; letter-spacing: -1px; font-size: 0.8rem; }
+.code-tiny { font-family: monospace; font-size: 0.75rem; background: var(--border); padding: 2px 5px; border-radius: 4px; cursor: pointer; margin-left: auto; }
 
-    <!-- پنل سبد خرید -->
-    <div class="drawer" id="cart-drawer">
-        <div class="drawer-header">
-            <h3>لیست مشاوره و سفارش</h3>
-            <button onclick="toggleCartPanel()" class="btn-glassy">بستن</button>
-        </div>
-        <div class="drawer-body" id="cart-list"></div>
-        <div class="drawer-footer">
-            <div id="cart-total">جمع: 0 تومان</div>
-            <button class="big-cta-btn" onclick="openMsgSelector()">
-                کپی و ارسال درخواست <i class="fas fa-paper-plane"></i>
-            </button>
-            <p class="cta-hint">جهت مشاوره رایگان یا ثبت سفارشات خود از لیست روی دکمه بالا بزنید</p>
-            
-            <div class="drawer-actions">
-                <button class="btn-act clear" onclick="clearCart()">پاکسازی همه</button>
-                <button class="btn-act close" onclick="toggleCartPanel()">بستن لیست</button>
-            </div>
-        </div>
-    </div>
+.c-price { font-weight: bold; color: var(--primary); font-size: 1rem; margin-top: 5px; }
+.off-line { text-decoration: line-through; color: var(--muted); font-size: 0.8rem; margin-left: 5px; }
 
-    <!-- مودال انتخاب پیام‌رسان (واسط) -->
-    <div class="modal small-modal" id="msg-selector-modal">
-        <div class="modal-box small-box">
-            <h3>انتخاب روش ارسال</h3>
-            <p>لطفا پیام‌رسان مورد نظر خود را انتخاب کنید. متن سفارش به صورت خودکار آماده ارسال خواهد شد.</p>
-            <div class="app-grid">
-                <button onclick="finalizeOrder('wa')" class="app-btn wa"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767115995/25-256308_whatsapp-social-media-icons-whatsapp_o9zkit.png"> واتساپ</button>
-                <button onclick="finalizeOrder('tg')" class="app-btn tg"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767113676/telgrampng.parspng.com__rzuqpw.png"> تلگرام</button>
-                <button onclick="finalizeOrder('ei')" class="app-btn ei"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767111952/Eitaa-vector-logo_1221133400_we5m5l.png"> ایتا</button>
-                <button onclick="finalizeOrder('ba')" class="app-btn ba"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112210/bale-color_a9gfhw.png"> بله</button>
-                <button onclick="finalizeOrder('ru')" class="app-btn ru"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767112404/Rubika_Icon_zlc48h.png"> روبیکا</button>
-                <button onclick="finalizeOrder('ig')" class="app-btn ig"><img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767116766/050e6fb1-f306-4571-a198-61f15806718e_1_ln8bgv.png"> اینستاگرام</button>
-            </div>
-            <button class="btn-glassy full-width" onclick="closeMsgSelector()">انصراف</button>
-        </div>
-    </div>
+/* Journal */
+#book-view { display: none; padding: 20px; justify-content: center; }
+.book-bg { background: url('https://www.transparenttextures.com/patterns/cream-paper.png'), #fdfbf7; padding: 20px; border-radius: 5px; border: 8px solid #8d6e63; width: 100%; max-width: 700px; position: relative; }
+.book-stage { perspective: 1500px; min-height: 500px; }
+.book-page { background: white; padding: 15px; border: 1px solid #ddd; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+.book-page img { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
 
-    <!-- مودال نمایش محصول -->
-    <div class="modal" id="modal">
-        <div class="modal-box">
-            <button class="modal-glass-btn" onclick="closeModal()">بازگشت ⬅</button>
-            
-            <div class="modal-img-wrap">
-                <img id="m-img" src="">
-                <!-- ابزارهای زوم -->
-                <div class="zoom-tools">
-                    <button onclick="zoomStep(1)"><i class="fas fa-search-plus"></i></button>
-                    <button onclick="zoomStep(-1)"><i class="fas fa-search-minus"></i></button>
-                </div>
-                <button class="expand-btn" onclick="openFullscreen()"><i class="fas fa-expand-arrows-alt"></i></button>
-            </div>
+/* Float Buttons */
+.float-btn { position: fixed; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.4); z-index: 95; cursor: pointer; transition: 0.3s; }
+.cart-btn { bottom: 20px; left: 20px; background: var(--primary); color: black; }
+.contact-btn { background: #34495e; bottom: 0; position: relative; left: 0; width: 55px; height: 55px; }
+.contact-wrapper { position: fixed; bottom: 90px; left: 22px; z-index: 95; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
-            <div class="modal-details">
-                <div class="stat-bar-center">
-                    <div class="stat-item"><i class="fas fa-eye"></i> <b id="m-views"></b></div>
-                    <div class="stat-item crown-center" id="m-crown"></div>
-                    <div class="stat-item"><i class="fas fa-heart" style="color:red"></i> <b id="m-likes"></b></div>
-                </div>
-                
-                <div class="code-compact" onclick="copyCode()">
-                    <span id="m-code"></span> <i class="far fa-copy"></i>
-                </div>
+.pop-options { display: none; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.pop-options.show { display: flex; animation: slideUp 0.3s; }
+.pop-item { background: #333; color: white; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.9rem; width: max-content; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-                <div class="price-section" id="m-price"></div>
-                <h2 id="m-title"></h2>
-                
-                <!-- باکس توضیحات -->
-                <div class="desc-box">
-                    <button class="copy-desc-btn" onclick="copyDesc()"><i class="far fa-clipboard"></i></button>
-                    <p id="m-desc"></p>
-                </div>
+/* Drawer */
+.drawer { position: fixed; top: 0; left: -100%; width: 100%; height: 100%; background: var(--card); z-index: 200; transition: 0.3s; display: flex; flex-direction: column; }
+@media(min-width: 768px) { .drawer { width: 400px; box-shadow: 5px 0 20px rgba(0,0,0,0.5); } }
+.drawer.open { left: 0; }
+.drawer-header { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.btn-glassy { background: var(--glass); border: 1px solid var(--border); color: var(--text); padding: 5px 15px; border-radius: 20px; cursor: pointer; }
 
-                <div class="modal-buttons">
-                    <button id="btn-add-list" class="glassy-add-btn" onclick="toggleListState()"></button>
-                    
-                    <button onclick="shareProduct()" class="share-img-btn">
-                        <img src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767222201/Share_Button1_zzh5v8.png" alt="Share">
-                    </button>
+.drawer-body { flex: 1; overflow-y: auto; padding: 15px; }
+.d-item { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.d-item img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
 
-                    <p class="cta-text">مشاوره و ثبت سفارش سریع:</p>
-                    <div class="social-grid" id="social-grid"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+.drawer-footer { padding: 15px; border-top: 1px solid var(--border); text-align: center; }
+.big-cta-btn { width: 100%; padding: 15px; background: var(--primary); color: black; font-weight: bold; border: none; border-radius: 12px; font-size: 1.1rem; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.cta-hint { font-size: 0.8rem; color: var(--muted); margin-top: 5px; }
+.drawer-actions { display: flex; gap: 10px; margin-top: 15px; }
+.btn-act { flex: 1; padding: 10px; border-radius: 8px; border: none; cursor: pointer; color: white; font-size: 0.9rem; }
+.clear { background: #ff3b30; } .close { background: #555; }
 
-    <!-- فول اسکرین زوم -->
-    <div id="fs-viewer" onclick="closeFullscreen()">
-        <button class="fs-exit-btn"><i class="fas fa-compress-arrows-alt"></i></button>
-        <div class="fs-zoom-controls" onclick="event.stopPropagation()">
-            <button onclick="fsZoom(1)">+</button>
-            <button onclick="fsZoom(-1)">-</button>
-        </div>
-        <img id="fs-img" src="">
-    </div>
+/* Modal */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 250; overflow-y: auto; align-items: center; justify-content: center; }
+.modal-box { background: var(--card); width: 100%; min-height: 100%; position: relative; padding-top: 50px; }
+@media(min-width: 768px) { .modal-box { width: 600px; min-height: auto; border-radius: 20px; overflow: hidden; padding-top: 0; } }
 
-    <!-- فوتر -->
-    <footer>
-        <div class="trust-logos">
-            <!-- لوگوهای بدون پس زمینه (فیلتر شده با CSS) -->
-            <img class="trust-icon" src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190935/E-Namad_sn92mb.png">
-            <img class="trust-icon" src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190937/Samandehi_fnoofo.png">
-            <img class="trust-icon" src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190939/ZarinPall_Secure_Pay_xmj7mj.png">
-            <img class="trust-icon" src="https://res.cloudinary.com/dsj7o7yld/image/upload/v1767190938/Anjoman_Senfi_Kasb_O_Karhay_Interneti_i1hvza.png">
-        </div>
-        <p class="copyright">تمامی حقوق این وبسایت برای آژانس خلاقیت دیجیتال نانومتریک محفوظ است (۱۴۰۵-۱۴۰۴)</p>
-    </footer>
+.modal-glass-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 20px; cursor: pointer; z-index: 10; font-size: 0.9rem; backdrop-filter: blur(5px); }
 
-    <!-- انیمیشن و پیام -->
-    <div id="fly-el"></div>
-    <div id="toast-msg"></div>
+.modal-img-wrap { position: relative; background: #000; text-align: center; }
+.modal-img-wrap img { max-width: 100%; max-height: 50vh; display: block; margin: 0 auto; }
+.zoom-tools { position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px; }
+.zoom-tools button { background: rgba(0,0,0,0.6); color: white; border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; }
+.expand-btn { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; width: 35px; height: 35px; border-radius: 8px; cursor: pointer; }
 
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script src="data.js"></script> 
-    <script src="script.js"></script>
-</body>
-</html>
+.modal-details { padding: 20px; }
+.stat-bar-center { display: flex; justify-content: center; gap: 20px; color: var(--muted); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+.stat-item { display: flex; align-items: center; gap: 5px; }
+.crown-center { color: gold; font-size: 1.2rem; }
+
+.price-section { text-align: center; font-size: 1.5rem; color: var(--primary); font-weight: bold; margin: 10px 0; }
+.code-compact { text-align: center; background: var(--border); display: inline-block; padding: 5px 10px; border-radius: 20px; font-family: monospace; font-size: 0.9rem; cursor: pointer; margin: 0 auto 15px auto; display: block; width: fit-content; }
+
+.desc-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 15px; border-radius: 10px; margin-bottom: 20px; position: relative; font-size: 0.9rem; line-height: 1.8; }
+.copy-desc-btn { position: absolute; top: 5px; left: 5px; background: transparent; border: none; color: var(--muted); cursor: pointer; }
+
+/* دکمه‌های شیشه‌ای بزرگ */
+.glassy-add-btn { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); font-weight: bold; font-size: 1rem; cursor: pointer; margin-bottom: 10px; transition: 0.3s; backdrop-filter: blur(5px); }
+.add-mode { background: rgba(0, 242, 255, 0.2); color: var(--primary); border-color: var(--primary); }
+.add-mode:before { content: "+ افزودن به لیست سفارشات"; }
+.remove-mode { background: rgba(255, 59, 48, 0.2); color: #ff3b30; border-color: #ff3b30; }
+.remove-mode:before { content: "🗑 حذف از لیست سفارشات"; }
+
+.share-img-btn { width: 100%; background: transparent; border: none; cursor: pointer; margin-bottom: 20px; padding: 0; }
+.share-img-btn img { width: 100%; border-radius: 10px; }
+
+.social-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.s-btn { padding: 10px; border-radius: 10px; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; font-size: 0.8rem; color: white; cursor: pointer; }
+.s-btn img { width: 25px; }
+
+/* Small Modal (Msg Selector) */
+.small-modal { align-items: center; justify-content: center; }
+.small-box { background: var(--card); padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+.app-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+.app-btn { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+.app-btn img { width: 24px; }
+.full-width { width: 100%; padding: 12px; }
+
+/* Toast */
+#toast-msg { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; z-index: 1000; display: none; backdrop-filter: blur(5px); }
+
+/* Footer */
+footer { text-align: center; padding: 40px 20px; background: #000; margin-top: 50px; }
+.trust-icon { height: 50px; margin: 5px; filter: grayscale(100%) brightness(200%); opacity: 0.7; }
+.copyright { margin-top: 20px; color: #666; font-size: 0.85rem; }
+
+/* Fullscreen Zoom */
+#fs-viewer { display: none; position: fixed; inset: 0; background: black; z-index: 1000; align-items: center; justify-content: center; }
+#fs-img { max-width: 100%; max-height: 100%; transition: transform 0.2s; }
+.fs-exit-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.3); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; z-index: 1001; }
+.fs-zoom-controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; z-index: 1001; }
+.fs-zoom-controls button { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); font-size: 1.5rem; cursor: pointer; }
