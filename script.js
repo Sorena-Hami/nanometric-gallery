@@ -146,4 +146,41 @@ function openModal(id) {
 function toggleListState() {
     const idx = cart.findIndex(c=>c.id===currentItem.id);
     if(idx > -1) { cart.splice(idx, 1); showToast("حذف شد"); }
-    else { cart.push(current
+    else { cart.push(currentItem); showToast("اضافه شد"); }
+    updateListBtn();
+    updateCartUI();
+    // بروزرسانی دکمه کوچک در گرید
+    const miniBtn = document.getElementById(`btn-${currentItem.id}`);
+    if(miniBtn) {
+        if(idx > -1) { miniBtn.classList.remove('added'); miniBtn.innerHTML="+"; }
+        else { miniBtn.classList.add('added'); miniBtn.innerHTML="✓"; }
+    }
+}
+
+function updateListBtn() {
+    const btn = document.getElementById('btn-add-list');
+    const isIn = cart.find(c=>c.id===currentItem.id);
+    if(isIn) { btn.innerText = "🗑 حذف از لیست"; btn.className = "glassy-add-btn remove-mode"; }
+    else { btn.innerText = "+ افزودن به لیست"; btn.className = "glassy-add-btn add-mode"; }
+}
+
+function updateCartUI() {
+    document.getElementById('cart-badge').innerText = cart.length;
+    const l = document.getElementById('cart-list');
+    l.innerHTML = '';
+    let total = 0;
+    cart.forEach(c => {
+        const pr = (c.off && c.off!=="0") ? parseInt(c.off) : parseInt(c.price);
+        total += pr;
+        l.innerHTML += `<div style="display:flex;gap:10px;margin-bottom:10px;border-bottom:1px solid #333;padding:10px"><img src="${c.img}" style="width:50px;height:50px;border-radius:5px"><div style="flex:1"><b>${c.title}</b></div></div>`;
+    });
+    document.getElementById('cart-total').innerText = `جمع: ${fmt(total)} تومان`;
+}
+
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+function toggleCartPanel() { document.getElementById('cart-drawer').classList.toggle('open'); }
+function showToast(txt) { const t=document.getElementById('toast-msg'); t.innerText=txt; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+function copyText(txt) { navigator.clipboard.writeText(txt); showToast("کد کپی شد"); }
+function copyCode() { copyText(currentItem.id); }
+function fmt(n) { return parseInt(n).toLocaleString(); }
+function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme')==='dark'?'light':'dark'); }
